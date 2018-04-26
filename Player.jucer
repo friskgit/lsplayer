@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="XeHRn4" name="Rosenberg" projectType="guiapp" version="1.0.0"
-              bundleIdentifier="com.juce.Rosenberg" includeBinaryInAppConfig="1"
-              jucerVersion="5.2.1" displaySplashScreen="1" reportAppUsage="1"
+<JUCERPROJECT id="XeHRn4" name="Player" projectType="guiapp" version="1.0.0"
+              bundleIdentifier="com.juce.Player" includeBinaryInAppConfig="1"
+              jucerVersion="5.3.1" displaySplashScreen="1" reportAppUsage="1"
               splashScreenColour="Dark" cppLanguageStandard="11" companyCopyright="">
-  <MAINGROUP id="BNpHuD" name="Rosenberg">
+  <MAINGROUP id="BNpHuD" name="Player">
     <GROUP id="{B1795414-5B06-F2B5-EC13-A53FD0B4EDE6}" name="Source">
       <FILE id="cC08GH" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
