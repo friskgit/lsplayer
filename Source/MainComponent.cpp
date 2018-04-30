@@ -5,221 +5,188 @@
 
 
 
-class MainContentComponent   : public AudioAppComponent,
-			       public ChangeListener,
-			       public Button::Listener,
-			       private Label::Listener
+class MainContentComponent : public AudioAppComponent,
+			     public ChangeListener,
+			     public Button::Listener,
+			     private Label::Listener
+			     //private Timer
 {
 public:
-  MainContentComponent()
-    :   state (Stopped),
-	backgroundThread ("Audio Recorder Thread"), sampleRate (44100), nextSampleNum (0), activeWriter (nullptr)
+  MainContentComponent() : state (Stopped),
+			   sampleRate (44100),
+			   nextSampleNum (0),
+			   activeWriter (nullptr),
+			   mapper(&transportSource, true),
+			   audioSetupComp (deviceManager,
+			   		   0,     // minimum input channels
+			   		   maxChannels,   // maximum input channels
+			   		   0,     // minimum output channels
+			   		   maxChannels,   // maximum output channels
+			   		   false, // ability to select midi inputs
+			   		   false, // ability to select midi output device
+			   		   false, // treat channels as stereo pairs
+			   		   false) // hide advanced options
 
   {
-    backgroundThread.startThread();
+    //backgroundThread.startThread();
 
-    dataDir = "~/rosenberg";
-    addAndMakeVisible (titleLabel);
-    titleLabel.setFont (Font ("Geneva", 36.0f, Font::bold));
-    titleLabel.setText("Folk Song Lab", dontSendNotification);
-    titleLabel.setColour (Label::textColourId, Colours::white);
-    titleLabel.setJustificationType (Justification::centred);
-
-    addAndMakeVisible(tryLabel);
-    tryLabel.setFont(Font ("Geneva", 14.0f, Font::plain));
-    tryLabel.setText("Prova igen!", dontSendNotification);
-    tryLabel.setColour(Label::textColourId, Colours::white);
-    tryLabel.setJustificationType(Justification::centred);
+    // addAndMakeVisible (titleLabel);
+    // titleLabel.setFont (Font ("Geneva", 36.0f, Font::bold));
+    // titleLabel.setText("Folk Song Lab", dontSendNotification);
+    // titleLabel.setColour (Label::textColourId, Colours::white);
+    // titleLabel.setJustificationType (Justification::centred);
         
     addAndMakeVisible (&playButton);
-    playButton.setButtonText ("Starta");
+    playButton.setButtonText ("Play");
     playButton.addListener (this);
     playButton.setColour (TextButton::buttonColourId, Colours::green);
-    playButton.setSize(200, 200);
+    // playButton.setSize(200, 200);
     playButton.setEnabled (true);
 
-    //   addAndMakeVisible (&stopButton);
-   stopButton.setButtonText ("Stop");
-   stopButton.addListener (this);
-   stopButton.setColour (TextButton::buttonColourId, Colours::red);
-   stopButton.setEnabled (false);
+    addAndMakeVisible (&stopButton);
+    stopButton.setButtonText ("Stop");
+    stopButton.addListener (this);
+    stopButton.setColour (TextButton::buttonColourId, Colours::red);
+    stopButton.setEnabled (false);
 
-   //    addAndMakeVisible (&recButton);
-    recButton.setButtonText ("Rec");
-    recButton.addListener (this);
-    recButton.setColour (TextButton::buttonColourId, Colours::red);
-    recButton.setEnabled (false);
+    // Diagnostics interface
+    addAndMakeVisible (audioSetupComp);
+    addAndMakeVisible (diagnosticsBox);
 
-    addAndMakeVisible (infoLabel1);
-    addAndMakeVisible (infoLabel2);
-    addAndMakeVisible (infoLabel3);
-    addAndMakeVisible (infoLabel4);
-    addAndMakeVisible (infoLabeli);
-    String infoText1;
-    String infoText2;
-    String infoText3;
-    String infoText4;
-    String infoTexti;
-    
-    infoText1 << "Tryck på starta för att \n";
-    infoText1 << "börja experimentet.";
-    infoText2 << "Sjung med i melodin så \n";
-    infoText2 << "samtidigt som du kan.";
-    infoText3 << "Din röst kommer att spelas in. Gör gärna flera försök ";
-    infoText3 << "genom att trycka på starta igen.";
-    infoText4 << "Tack för din hjälp!";
+    diagnosticsBox.setMultiLine (true);
+    diagnosticsBox.setReturnKeyStartsNewLine (true);
+    diagnosticsBox.setReadOnly (true);
+    diagnosticsBox.setScrollbarsShown (true);
+    diagnosticsBox.setCaretVisible (false);
+    diagnosticsBox.setPopupMenuEnabled (true);
+    diagnosticsBox.setColour (TextEditor::backgroundColourId, Colour (0x32ffffff));
+    diagnosticsBox.setColour (TextEditor::outlineColourId,    Colour (0x1c000000));
+    diagnosticsBox.setColour (TextEditor::shadowColourId,     Colour (0x16000000));
 
-    infoTexti << "Genom att du trycker på starta så godkänner du att din/dina";
-    infoTexti << "inspelningar kan användas i forskningssyfte, men du är ";
-    infoTexti << "försäkrad om att deltagandet är helt anonymt.";
-	
-    infoLabel1.setText (infoText1, dontSendNotification);
-    infoLabel1.setColour (Label::backgroundColourId, Colours::darkgrey);
-    infoLabel1.setFont(Font ("Geneva", 24.0f, Font::plain));
+    cpuUsageLabel.setText ("CPU Usage", dontSendNotification);
+    cpuUsageText.setJustificationType (Justification::right);
+    addAndMakeVisible (&cpuUsageLabel);
+    addAndMakeVisible (&cpuUsageText);
 
-    infoLabel2.setText (infoText2, dontSendNotification);
-    infoLabel2.setColour (Label::backgroundColourId, Colours::darkgrey);
-    infoLabel2.setFont(Font ("Geneva", 24.0f, Font::plain));
+    deviceManager.addChangeListener (this);
+    // Datadirectory
+    dataDir = "~/rosenberg";
 
-    infoLabel3.setText (infoText3, dontSendNotification);
-    infoLabel3.setColour (Label::backgroundColourId, Colours::darkgrey);
-    infoLabel3.setFont(Font ("Geneva", 14.0f, Font::plain));
-
-    infoLabel4.setText (infoText4, dontSendNotification);
-    infoLabel4.setColour (Label::backgroundColourId, Colours::darkgrey);
-    infoLabel4.setFont(Font ("Geneva", 14.0f, Font::plain));
-    
-    infoLabeli.setText (infoTexti, dontSendNotification);
-    infoLabeli.setColour (Label::backgroundColourId, Colours::darkgrey);
-    infoLabeli.setFont(Font ("Geneva", 14.0f, Font::plain));   
- 
     setSize (800, 600);
-        
+
+    
     formatManager.registerBasicFormats();       // [1]
     transportSource.addChangeListener (this);   // [2]
 
+    // Set the number of channels needed for this source.
     setAudioChannels (2, 2);
-    //    deviceManager.addAudioCallback (&recorder);
-
+    mapper.setNumberOfChannelsToProduce(2);
     //recorder.startRecording (file);
     File dir("~/rosenberg/audio");
     files = dir.findChildFiles(2, false, "*.wav");
     for(int i = 0; i < files.size(); i++)
       std::cout << files[i].getFileName() << std::endl;
+    int numOfSourceChannels = 2;
+    
+    // Make channel mapping interface
+    int startYPos = 420;
+    int startXPos = 100;
+    int Xindent = 100;
+    int Yindent = 30;
+    for(int i = 0; i<numOfSourceChannels; ++i) {
+      addAndMakeVisible(channelNames[i]);
+      channelNames[i].setText("Channel "+std::to_string(i), dontSendNotification);
+      channelNames[i].setBounds(startXPos+(Xindent*i), startYPos-10, 80, 30);
+      for(int j = 0;j<getNumberOfHardwareOutputs(); ++j) {
+	addAndMakeVisible(routeChannel[i][j]);
+	routeChannel[i][j].setButtonText(TRANS("Output "+std::to_string(j)));
+	routeChannel[i][j].addListener(this);
+	routeChannel[i][j].setBounds(startXPos+(Xindent*i), startYPos+(Yindent*j), 80, 50);
+      }
+    }
+
   }
     
   ~MainContentComponent()
   {
+    deviceManager.removeChangeListener (this);
     shutdownAudio();
   }
 
-      void paint (Graphics& g) override
-    {
-         g.fillAll (Colours::darkgrey);
-    }
-
-    void labelTextChanged (Label* label) override
-    {
- //       if (label == &inputText)
-  //          uppercaseText.setText (inputText.getText().toUpperCase(), dontSendNotification);
-    }
+  void labelTextChanged (Label* label) override
+  {
+  }
   void prepareToPlay (int samplesPerBlockExpected, double sR) override
   {
     transportSource.prepareToPlay (samplesPerBlockExpected, sR);
+    transportSourcei.prepareToPlay (samplesPerBlockExpected, sR);
+    //    mapper.prepareToPlay (samplesPerBlockExpected, sR);
+    //    mapper.setInputChannelMapping(0, 1);
+    //    mapper.setInputChannelMapping(1, 1);
+    //    mapper.setOutputChannelMapping(0, 0);
+    //    mapper.setOutputChannelMapping(1, 1);
+    mixer.addInputSource(&transportSource, false);
+    mixer.addInputSource(&transportSourcei, false);
     sampleRate = sR;
   }
 
   void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
   {
-    AudioIODevice* device = deviceManager.getCurrentAudioDevice();
+    auto* device = deviceManager.getCurrentAudioDevice();
+    
     const BigInteger activeInputChannels = device->getActiveInputChannels();
     const BigInteger activeOutputChannels = device->getActiveOutputChannels();
     const int maxInputChannels = activeInputChannels.getHighestBit() + 1;
-    const int maxOutputChannels = 1; //activeOutputChannels.getHighestBit() + 1;
+    const int maxOutputChannels = activeOutputChannels.getHighestBit() + 1;
 
     //    const float** inputChannelData
-    const ScopedLock sl(writerLock);
+    //    const ScopedLock sl(writerLock);
     //    std::cout << "output channels: " << maxOutputChannels << std::endl;
+    //    std::cout << "input channels: " << maxInputChannels << std::endl;
+    if (readerSource.get() == nullptr)
+    {
+        bufferToFill.clearActiveBufferRegion();
+        return;
+    }
 
-    // Clear buffers
-    if (readerSource == nullptr)
-      {
-    	bufferToFill.clearActiveBufferRegion();
-    	return;
-      }
-    
-    for (int channel = 0; channel < maxOutputChannels; ++channel)
-      {
-	// Clear buffers
-        if ((! activeOutputChannels[channel]) || maxInputChannels == 0)
-	  {
-            bufferToFill.buffer->clear (channel, bufferToFill.startSample, bufferToFill.numSamples);
-	  }
-        else
-	  {
-            const int actualInputChannel = channel % maxInputChannels; // [1]
-            
-            if (! activeInputChannels[channel]) // [2]
-	      {
-                bufferToFill.buffer->clear (channel, bufferToFill.startSample, bufferToFill.numSamples);
-	      }
-            else 
-	      {
-		if(activeWriter != nullptr)
-		  {
-		    
-		    // const float* inBuffer = bufferToFill.buffer->getReadPointer (actualInputChannel,
-		    // 								 bufferToFill.startSample);
-		    const float** inBuffer = bufferToFill.buffer->getArrayOfReadPointers();
-		    activeWriter->write(inBuffer, bufferToFill.numSamples);
-		    float* outBuffer = bufferToFill.buffer->getWritePointer (channel,
-									     bufferToFill.startSample);
-
-		    nextSampleNum += bufferToFill.numSamples;
-
-		  }
-	      }
-	  }
-      }
     // The play routine
     // Get samples from the file to play back.
-    transportSource.getNextAudioBlock (bufferToFill);
-    				    // const float** both;
-		    // both[0] = inBuffer;
-		    // both[1] = inBuffer;
-
-		    //		    activeWriter->writeFromAudioSampleBuffer(rec, bufferToFill.numSamples, 2048);
-		    //		    AudioBuffer<float*> myBuffer(inBuffer, 1, bufferToFill.numSamples);
-		    
-		    //		    
-		    //		    AudioBuffer<float> buffer (const_cast<float*> (inBuffer), 1, bufferToFill.numSamples);
-				//for (int sample = 0; sample < bufferToFill.numSamples; ++sample)
-		// outBuffer[sample] = inBuffer[sample] * random.nextFloat();
-		//outBuffer[sample] =
-		// We need to clear the output buffers, in case they're full of junk..
-		//		  if (outBuffer != nullptr)
-		    //		    FloatVectorOperations::clear(outBuffer, bufferToFill.numSamples);
+    mixer.getNextAudioBlock(bufferToFill);
+    //    transportSource.getNextAudioBlock(bufferToFill);
   }
 
   void releaseResources() override
   {
+    //    mapper.releaseResources();
     transportSource.releaseResources();
     sampleRate = 0;
   }
 
+  void paint (Graphics& g) override
+  {
+    g.setColour (Colours::grey);
+    g.fillRect (getLocalBounds().removeFromRight (proportionOfWidth (0.4f)));
+  }
+  
   void resized() override
   {
     //    titleLabel.centreWithSize(400, 400);
     titleLabel.setBounds(10, 0, 200, 100);
-    playButton.centreWithSize(80, 50);
-    tryLabel.setSize(getWidth()-100, 60);
-    tryLabel.setCentreRelative(0.5f, 0.59f);
-    infoLabel1.setBounds (600, 0, 400, 100);
-    infoLabel2.setBounds (600, 80, 400, 60);
-    infoLabel3.setBounds (600, 170, 300, 30);
-    infoLabel4.setBounds (600, 200, 300, 30);
-    infoLabeli.setBounds (10, getHeight()-100, 300, 100);
-    //    infoLabel.setTopRightPosition(getWidth(), -140);
+    //    playButton.centreWithSize(80, 50);
+    playButton.setBounds(100, 300, 80, 50);
+    //    stopButton.centreWithSize(80, 50);
+    stopButton.setBounds(100, 360, 80, 50);
+    auto rect = getLocalBounds();
+
+    audioSetupComp.setBounds (rect.removeFromLeft (proportionOfWidth (0.6f)));
+    rect.reduce (10, 10);
+
+    auto topLine (rect.removeFromTop (20));
+    cpuUsageLabel.setBounds (topLine.removeFromLeft (topLine.getWidth() / 2));
+    cpuUsageText.setBounds (topLine);
+    rect.removeFromTop (20);
+
+    diagnosticsBox.setBounds (rect);
   }
     
   void changeListenerCallback (ChangeBroadcaster* source) override
@@ -231,14 +198,37 @@ public:
 	else
 	  changeState (Stopped);
       }
+    dumpDeviceInfo();
   }
 
   void buttonClicked (Button* button) override
   {
+    int numOfSourceChannels = 2;
+    int outOfBounds = 256;
     if (button == &openButton)  openButtonClicked();
     if (button == &playButton)  playButtonClicked();
     if (button == &stopButton)  stopButtonClicked();
-    if (button == &recButton) recButtonClicked();
+    //    if (button == &recButton) recButtonClicked();
+
+    // Routing happens here
+    for(int i = 0; i<numOfSourceChannels; ++i) {
+      for(int j = 0;j<getNumberOfHardwareOutputs(); ++j) {
+	if(button == &routeChannel[i][j]) {
+	  if(button->getToggleState()) { // Switch on routing for node
+	    mapper.setOutputChannelMapping(i, j);
+	    logMessage("--------------------------------------");
+	    logMessage("Audio channel "+std::to_string(i)+" mapped to output "+std::to_string(j));
+	  }
+	    //	    logMessage("Yes"+std::to_string(i)+std::to_string(j));
+	  else {
+	    mapper.setOutputChannelMapping(i, outOfBounds);
+	  }
+	    //logMessage("No");
+	}
+    	//	routeChannel[i][j].setBounds(startXPos+(Xindent*i), startYPos+(Yindent*j), 80, 50);
+      }
+    }
+
   }
 
 private:
@@ -262,43 +252,35 @@ private:
 	    stopButton.setEnabled (false);
 	    playButton.setEnabled (true);
 	    transportSource.setPosition (0.0);
-	    stopRecording();
-	    tryLabel.setVisible(true);
 	    break;
                     
 	  case Starting:                        
 	    playButton.setEnabled (true);
-	    transportSource.start();
+	    startSources();
 	    break;
                     
 	  case Playing:                         
 	    stopButton.setEnabled (true);
 	    playButton.setEnabled (false);
-	    tryLabel.setVisible(false);
 	    break;
                     
 	  case Stopping:                        
 	    transportSource.stop();
+	    transportSourcei.stop();
 	    break;
 	  }
       }
   }
-    
+
+  void startSources()
+  {
+    ScopedLock lock(deviceManager.getAudioCallbackLock());
+    transportSource.start();
+    //    transportSourcei.start();
+  }
   void openButtonClicked()
   {
-    if(transportSource.isPlaying()) {
-      changeState(Stopped);
-    }
 
-    AudioFormatReader* reader;
-
-    if (reader != nullptr)
-      {
-	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true); 
-	transportSource.setSource (newSource, 0, nullptr, reader->sampleRate);
-	playButton.setEnabled (true);
-	readerSource = newSource.release();
-      }
   }
 
     
@@ -306,21 +288,30 @@ private:
   {
 
     AudioFormatReader* reader;
-
+    AudioFormatReader* readeri;
     //    auto file = File::getSpecialLocation (File::userDocumentsDirectory).getNonexistentChildFile ("AudioRecording", ".wav");
     int numOfFiles = files.size();
     int f = std::rand()%numOfFiles;
-    reader = formatManager.createReaderFor(files[f]);
+    reader = formatManager.createReaderFor(files[0]);
+    readeri = formatManager.createReaderFor(files[0]);
 
-    startRecording(f);      
     if (reader != nullptr)
       {
-	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true); 
-	transportSource.setSource (newSource, 0, nullptr, reader->sampleRate);
-	playButton.setEnabled (true);
+	int fileChannels = reader->numChannels;
+	std::cout << fileChannels << std::endl;
+	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true);
+	transportSource.setSource(newSource, 0, nullptr, reader->sampleRate);
 	readerSource = newSource.release();
+	playButton.setEnabled(true);
       }
-    changeState (Starting);
+    if (readeri != nullptr)
+      {
+	ScopedPointer<AudioFormatReaderSource> newSourcei = new AudioFormatReaderSource (readeri, true);
+	transportSourcei.setSource(newSourcei, 0, nullptr, readeri->sampleRate);
+	readerSourcei = newSourcei.release();
+
+      }
+    changeState(Starting);
   }
     
   void stopButtonClicked()
@@ -328,68 +319,60 @@ private:
     changeState (Stopping);
   }
 
-  void recButtonClicked()
+  static String getListOfActiveBits (const BigInteger& b)
   {
-    //    std::cout << "Record" << std::endl;
+    StringArray bits;
+    
+    for (auto i = 0; i <= b.getHighestBit(); ++i)
+      if (b[i])
+	bits.add (String (i));
+    
+    return bits.joinIntoString (", ");
   }
 
-  void startRecording(int f)
+  void dumpDeviceInfo()
   {
-    String fileName = files[f].getFileNameWithoutExtension();
-    String index = String(fileIndex) += String("-");
-    String recName = index += fileName;
-    //    auto file = File::getSpecialLocation(File::userDocumentsDirectory).getNonexistentChildFile (recName, ".wav");
-    auto file = File(dataDir).getNonexistentChildFile (recName, ".wav");
-    //    recorder.startRecording(file);
-    stopRecording();
-    if (sampleRate > 0)
+    logMessage ("--------------------------------------");
+    logMessage ("Current audio device type: " + (deviceManager.getCurrentDeviceTypeObject() != nullptr
+						 ? deviceManager.getCurrentDeviceTypeObject()->getTypeName()
+						 : "<none>"));
+
+    if (auto* device = deviceManager.getCurrentAudioDevice())
       {
-	// Create output stream
-	file.deleteFile();
-	ScopedPointer<FileOutputStream> fileStream(file.createOutputStream());
-	if(fileStream != nullptr) {
-	  WavAudioFormat wavFormat;
-	  AudioFormatWriter* writer = wavFormat.createWriterFor(fileStream, sampleRate, 1, 16, StringPairArray(), 0);
-	  if(writer != nullptr)
-	    {
-	      // Responsibility for deleting is left to the writer.
-	      fileStream.release();
-	      threadedWriter = new AudioFormatWriter::ThreadedWriter(writer, backgroundThread, 32768);
-	      const ScopedLock sl(writerLock);
-	      activeWriter = threadedWriter;
-	    }
-	}
+	logMessage ("Current audio device: "   + device->getName().quoted());
+	logMessage ("Sample rate: "    + String (device->getCurrentSampleRate()) + " Hz");
+	logMessage ("Block size: "     + String (device->getCurrentBufferSizeSamples()) + " samples");
+	logMessage ("Bit depth: "      + String (device->getCurrentBitDepth()));
+	logMessage ("Input channel names: "    + device->getInputChannelNames().joinIntoString (", "));
+	logMessage ("Active input channels: "  + getListOfActiveBits (device->getActiveInputChannels()));
+	logMessage ("Output channel names: "   + device->getOutputChannelNames().joinIntoString (", "));
+	logMessage ("Active output channels: " + getListOfActiveBits (device->getActiveOutputChannels()));
       }
-    fileIndex++;
+    else
+      {
+	logMessage ("No audio device open");
+      }
+    logMessage((String)getNumberOfHardwareOutputs());
   }
 
-  void stopRecording()
+  int getNumberOfHardwareOutputs()
   {
-    // First, clear this pointer to stop the audio callback from using our writer object..
-    {
-      const ScopedLock sl (writerLock);
-      activeWriter = nullptr;
-    }
-    std::cout << "Stopped recording..." << std::endl;
-    // Now we can delete the writer object. It's done in this order because the deletion could
-    // take a little time while remaining data gets flushed to disk, so it's best to avoid blocking
-    // the audio callback while this happens.
-    threadedWriter.reset();
-    //    recorder.stop();
+    auto* device = deviceManager.getCurrentAudioDevice();
+    const BigInteger ch = device->getActiveOutputChannels();
+    int activeChannels = ch.getHighestBit() + 1;
+    return activeChannels;
   }
-
+  
+  void logMessage (const String& m)
+  {
+    diagnosticsBox.moveCaretToEnd();
+    diagnosticsBox.insertTextAtCaret (m + newLine);
+  }
   //==========================================================================
   TextButton openButton;
   TextButton playButton;
   TextButton stopButton;
-  TextButton recButton;
   Label titleLabel;
-  Label tryLabel;
-  Label infoLabel1;
-  Label infoLabel2;
-  Label infoLabel3;
-  Label infoLabel4;
-  Label infoLabeli;
   String dataDir;
   double sampleRate;
   int64 nextSampleNum;
@@ -398,11 +381,28 @@ private:
   AudioFormatWriter::ThreadedWriter* volatile activeWriter;
   AudioFormatManager formatManager;
   ScopedPointer<AudioFormatReaderSource> readerSource;
+  ScopedPointer<AudioFormatReaderSource> readerSourcei;
   AudioTransportSource transportSource;
+  AudioTransportSource transportSourcei;
+  MixerAudioSource mixer;
+  //  AudioSource audioSource;
   TransportState state;
-  TimeSliceThread backgroundThread; // the thread that will write our audio data to disk
+  juce::ChannelRemappingAudioSource mapper;
+  //  TimeSliceThread backgroundThread; // the thread that will write our audio data to disk
   Array<File> files;
   int fileIndex = 0;
+  int channelsInFile = 0;
+  const static int maxChannels = 64;
+  const static int sourceChannels = 2;
+
+  AudioDeviceSelectorComponent audioSetupComp;
+  Label cpuUsageLabel;
+  Label cpuUsageText;
+  Label channelNames[sourceChannels];
+  TextEditor diagnosticsBox;
+  ToggleButton routeChannel[sourceChannels][maxChannels];
+
+  
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
 
