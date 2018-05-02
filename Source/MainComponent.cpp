@@ -118,15 +118,16 @@ public:
   }
   void prepareToPlay (int samplesPerBlockExpected, double sR) override
   {
-    transportSource.prepareToPlay (samplesPerBlockExpected, sR);
-    transportSourcei.prepareToPlay (samplesPerBlockExpected, sR);
+    // transportSource.prepareToPlay (samplesPerBlockExpected, sR);
+    // transportSourcei.prepareToPlay (samplesPerBlockExpected, sR);
     //    mapper.prepareToPlay (samplesPerBlockExpected, sR);
     //    mapper.setInputChannelMapping(0, 1);
     //    mapper.setInputChannelMapping(1, 1);
     //    mapper.setOutputChannelMapping(0, 0);
     //    mapper.setOutputChannelMapping(1, 1);
-    mixer.addInputSource(&transportSource, false);
-    mixer.addInputSource(&transportSourcei, false);
+    // mixer.addInputSource(&transportSource, false);
+    // mixer.addInputSource(&transportSourcei, false);
+    ts.prepareToPlay (samplesPerBlockExpected, sR);
     sampleRate = sR;
   }
 
@@ -151,14 +152,15 @@ public:
 
     // The play routine
     // Get samples from the file to play back.
-    mixer.getNextAudioBlock(bufferToFill);
+    ts.getNextAudioBlock(bufferToFill);
     //    transportSource.getNextAudioBlock(bufferToFill);
   }
 
   void releaseResources() override
   {
     //    mapper.releaseResources();
-    transportSource.releaseResources();
+    //transportSource.releaseResources();
+    ts.releaseResources();
     sampleRate = 0;
   }
 
@@ -251,7 +253,7 @@ private:
 	  case Stopped:                         
 	    stopButton.setEnabled (false);
 	    playButton.setEnabled (true);
-	    transportSource.setPosition (0.0);
+	    ts.setPosition (0.0);
 	    break;
                     
 	  case Starting:                        
@@ -265,8 +267,8 @@ private:
 	    break;
                     
 	  case Stopping:                        
-	    transportSource.stop();
-	    transportSourcei.stop();
+	    ts.stop();
+	    //	    transportSourcei.stop();
 	    break;
 	  }
       }
@@ -274,8 +276,8 @@ private:
 
   void startSources()
   {
-    ScopedLock lock(deviceManager.getAudioCallbackLock());
-    transportSource.start();
+    //    ScopedLock lock(deviceManager.getAudioCallbackLock());
+    ts.start();
     //    transportSourcei.start();
   }
   void openButtonClicked()
@@ -288,32 +290,46 @@ private:
   {
 
     AudioFormatReader* reader;
-    AudioFormatReader* readeri;
+    // AudioFormatReader* readeri;
     //    auto file = File::getSpecialLocation (File::userDocumentsDirectory).getNonexistentChildFile ("AudioRecording", ".wav");
     int numOfFiles = files.size();
     int f = std::rand()%numOfFiles;
+
+    //    createReader(files[0]);
     reader = formatManager.createReaderFor(files[0]);
-    readeri = formatManager.createReaderFor(files[0]);
+    // readeri = formatManager.createReaderFor(files[0]);
 
     if (reader != nullptr)
       {
-	int fileChannels = reader->numChannels;
-	std::cout << fileChannels << std::endl;
-	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true);
-	transportSource.setSource(newSource, 0, nullptr, reader->sampleRate);
-	readerSource = newSource.release();
-	playButton.setEnabled(true);
+    	int fileChannels = reader->numChannels;
+    	std::cout << fileChannels << std::endl;
+    	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true);
+    	ts.setSource(newSource, 0, nullptr, reader->sampleRate);
+    	readerSource = newSource.release();
+    	playButton.setEnabled(true);
       }
-    if (readeri != nullptr)
-      {
-	ScopedPointer<AudioFormatReaderSource> newSourcei = new AudioFormatReaderSource (readeri, true);
-	transportSourcei.setSource(newSourcei, 0, nullptr, readeri->sampleRate);
-	readerSourcei = newSourcei.release();
+    // if (readeri != nullptr)
+    //   {
+    // 	ScopedPointer<AudioFormatReaderSource> newSourcei = new AudioFormatReaderSource (readeri, true);
+    // 	transportSourcei.setSource(newSourcei, 0, nullptr, readeri->sampleRate);
+    // 	readerSourcei = newSourcei.release();
 
-      }
+    //   }
     changeState(Starting);
   }
-    
+
+  void createReader(const File &file)
+  {
+    AudioFormatReader* reader;
+    reader = formatManager.createReaderFor(file);
+    if(reader != nullptr)
+      {
+	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
+	ts.setSource(source, 0, nullptr, reader->sampleRate);
+	rs = source.release();
+      }
+  }
+  
   void stopButtonClicked()
   {
     changeState (Stopping);
@@ -382,8 +398,10 @@ private:
   AudioFormatManager formatManager;
   ScopedPointer<AudioFormatReaderSource> readerSource;
   ScopedPointer<AudioFormatReaderSource> readerSourcei;
+  ScopedPointer<AudioFormatReaderSource> rs;
   AudioTransportSource transportSource;
   AudioTransportSource transportSourcei;
+  AudioTransportSource ts;
   MixerAudioSource mixer;
   //  AudioSource audioSource;
   TransportState state;
