@@ -16,7 +16,7 @@ public:
 			   sampleRate (44100),
 			   nextSampleNum (0),
 			   activeWriter (nullptr),
-			   mapper(&transportSource, true),
+			   //			   mapper(&transportSource, true),
 			   audioSetupComp (deviceManager,
 			   		   0,     // minimum input channels
 			   		   maxChannels,   // maximum input channels
@@ -60,8 +60,8 @@ public:
     diagnosticsBox.setCaretVisible (false);
     diagnosticsBox.setPopupMenuEnabled (true);
     diagnosticsBox.setColour (TextEditor::backgroundColourId, Colour (0x32ffffff));
-    diagnosticsBox.setColour (TextEditor::outlineColourId,    Colour (0x1c000000));
-    diagnosticsBox.setColour (TextEditor::shadowColourId,     Colour (0x16000000));
+    diagnosticsBox.setColour (TextEditor::outlineColourId, Colour (0x1c000000));
+    diagnosticsBox.setColour (TextEditor::shadowColourId, Colour (0x16000000));
 
     cpuUsageLabel.setText ("CPU Usage", dontSendNotification);
     cpuUsageText.setJustificationType (Justification::right);
@@ -73,14 +73,16 @@ public:
     dataDir = "~/rosenberg";
 
     setSize (800, 600);
-
+    
     
     formatManager.registerBasicFormats();       // [1]
-    transportSource.addChangeListener (this);   // [2]
-
+    //    ts.addChangeListener (this);   // [2]
+    transports.add(new AudioTransportSource());
+    transports[0]->addChangeListener(this);
+    
     // Set the number of channels needed for this source.
     setAudioChannels (2, 2);
-    mapper.setNumberOfChannelsToProduce(2);
+    //    mapper.setNumberOfChannelsToProduce(2);
     //recorder.startRecording (file);
     File dir("~/rosenberg/audio");
     files = dir.findChildFiles(2, false, "*.wav");
@@ -127,7 +129,8 @@ public:
     //    mapper.setOutputChannelMapping(1, 1);
     // mixer.addInputSource(&transportSource, false);
     // mixer.addInputSource(&transportSourcei, false);
-    ts.prepareToPlay (samplesPerBlockExpected, sR);
+    //    ts.prepareToPlay (samplesPerBlockExpected, sR);
+    transports[0]->prepareToPlay(samplesPerBlockExpected, sR);
     sampleRate = sR;
   }
 
@@ -144,15 +147,15 @@ public:
     //    const ScopedLock sl(writerLock);
     //    std::cout << "output channels: " << maxOutputChannels << std::endl;
     //    std::cout << "input channels: " << maxInputChannels << std::endl;
-    if (readerSource.get() == nullptr)
-    {
-        bufferToFill.clearActiveBufferRegion();
-        return;
-    }
+    // if (readerSource.get() == nullptr)
+    // {
+    //     bufferToFill.clearActiveBufferRegion();
+    //     return;
+    // }
 
     // The play routine
     // Get samples from the file to play back.
-    ts.getNextAudioBlock(bufferToFill);
+    transports[0]->getNextAudioBlock(bufferToFill);
     //    transportSource.getNextAudioBlock(bufferToFill);
   }
 
@@ -160,7 +163,8 @@ public:
   {
     //    mapper.releaseResources();
     //transportSource.releaseResources();
-    ts.releaseResources();
+    transports[0]->releaseResources();
+      //    ts.releaseResources();
     sampleRate = 0;
   }
 
@@ -193,9 +197,9 @@ public:
     
   void changeListenerCallback (ChangeBroadcaster* source) override
   {
-    if (source == &transportSource)
+    if (source == &ts)
       {
-	if (transportSource.isPlaying())
+	if (ts.isPlaying())
 	  changeState (Playing);
 	else
 	  changeState (Stopped);
@@ -217,13 +221,13 @@ public:
       for(int j = 0;j<getNumberOfHardwareOutputs(); ++j) {
 	if(button == &routeChannel[i][j]) {
 	  if(button->getToggleState()) { // Switch on routing for node
-	    mapper.setOutputChannelMapping(i, j);
+	    //	    mapper.setOutputChannelMapping(i, j);
 	    logMessage("--------------------------------------");
 	    logMessage("Audio channel "+std::to_string(i)+" mapped to output "+std::to_string(j));
 	  }
 	    //	    logMessage("Yes"+std::to_string(i)+std::to_string(j));
 	  else {
-	    mapper.setOutputChannelMapping(i, outOfBounds);
+	    //	    mapper.setOutputChannelMapping(i, outOfBounds);
 	  }
 	    //logMessage("No");
 	}
@@ -253,7 +257,7 @@ private:
 	  case Stopped:                         
 	    stopButton.setEnabled (false);
 	    playButton.setEnabled (true);
-	    ts.setPosition (0.0);
+	    transports[0]->setPosition (0.0);
 	    break;
                     
 	  case Starting:                        
@@ -267,7 +271,8 @@ private:
 	    break;
                     
 	  case Stopping:                        
-	    ts.stop();
+	    //	    ts.stop();
+	    transports[0]->stop();
 	    //	    transportSourcei.stop();
 	    break;
 	  }
@@ -277,7 +282,9 @@ private:
   void startSources()
   {
     //    ScopedLock lock(deviceManager.getAudioCallbackLock());
-    ts.start();
+    //    ts.start();
+
+    transports[0]->start();
     //    transportSourcei.start();
   }
   void openButtonClicked()
@@ -289,32 +296,39 @@ private:
   void playButtonClicked()
   {
 
-    AudioFormatReader* reader;
+    //    AudioFormatReader* reader;
     // AudioFormatReader* readeri;
     //    auto file = File::getSpecialLocation (File::userDocumentsDirectory).getNonexistentChildFile ("AudioRecording", ".wav");
     int numOfFiles = files.size();
     int f = std::rand()%numOfFiles;
 
     //    createReader(files[0]);
-    reader = formatManager.createReaderFor(files[0]);
+    //    reader = formatManager.createReaderFor(files[0]);
     // readeri = formatManager.createReaderFor(files[0]);
 
-    if (reader != nullptr)
-      {
-    	int fileChannels = reader->numChannels;
-    	std::cout << fileChannels << std::endl;
-    	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true);
-    	ts.setSource(newSource, 0, nullptr, reader->sampleRate);
-    	readerSource = newSource.release();
-    	playButton.setEnabled(true);
-      }
-    // if (readeri != nullptr)
+    // if (reader != nullptr)
     //   {
-    // 	ScopedPointer<AudioFormatReaderSource> newSourcei = new AudioFormatReaderSource (readeri, true);
-    // 	transportSourcei.setSource(newSourcei, 0, nullptr, readeri->sampleRate);
-    // 	readerSourcei = newSourcei.release();
-
+    // 	int fileChannels = reader->numChannels;
+    // 	std::cout << fileChannels << std::endl;
+    // 	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true);
+    // 	ts.setSource(newSource, 0, nullptr, reader->sampleRate);
+    // 	readerSource = newSource.release();
+    // 	playButton.setEnabled(true);
     //   }
+
+    // Array version
+    int index = 0;
+    AudioFormatReader* r;
+    r = formatManager.createReaderFor(files[index]);
+    readers.add(r);
+    //    transports.add(new AudioTransportSource());
+    if (r != nullptr)
+      {
+	ScopedPointer<AudioFormatReaderSource> s = new AudioFormatReaderSource(r, true);
+	transports[0]->setSource(s, 0, nullptr, r->sampleRate);
+	readerSources.add(s.release());
+	playButton.setEnabled(true);
+      }
     changeState(Starting);
   }
 
@@ -400,12 +414,18 @@ private:
   ScopedPointer<AudioFormatReaderSource> readerSourcei;
   ScopedPointer<AudioFormatReaderSource> rs;
   AudioTransportSource transportSource;
-  AudioTransportSource transportSourcei;
+  AudioTransportSource* transportSourcei;
   AudioTransportSource ts;
+
+  int maxNumberOfFiles = 1;
+  OwnedArray<AudioTransportSource> transports;
+  OwnedArray<AudioFormatReader> readers;
+  OwnedArray<AudioFormatReaderSource> readerSources;
+  
   MixerAudioSource mixer;
   //  AudioSource audioSource;
   TransportState state;
-  juce::ChannelRemappingAudioSource mapper;
+  //  juce::ChannelRemappingAudioSource mapper;
   //  TimeSliceThread backgroundThread; // the thread that will write our audio data to disk
   Array<File> files;
   int fileIndex = 0;
