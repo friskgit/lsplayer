@@ -78,7 +78,7 @@ public:
     formatManager.registerBasicFormats();       // [1]
     //    ts.addChangeListener (this);   // [2]
     transports.add(new AudioTransportSource());
-    transports[0]->addChangeListener(this);
+    transports.getFirst()->addChangeListener(this);
     
     // Set the number of channels needed for this source.
     setAudioChannels (2, 2);
@@ -197,9 +197,9 @@ public:
     
   void changeListenerCallback (ChangeBroadcaster* source) override
   {
-    if (source == &ts)
+    if (source == transports[0])
       {
-	if (ts.isPlaying())
+	if (transports[0]->isPlaying())
 	  changeState (Playing);
 	else
 	  changeState (Stopped);
