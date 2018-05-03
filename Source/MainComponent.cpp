@@ -138,6 +138,11 @@ public:
     // Mixer
     // mixer.addInputSource(&transportSource, false);
     // mixer.addInputSource(&transportSourcei, false);
+
+    // for(int i = 0; i < files.size(); i++) {
+    //   if(i < maxNumberOfFiles)
+    // 	transports[i]->prepareToPlay(samplesPerBlockExpected, sR);
+    // }
     transports[0]->prepareToPlay(samplesPerBlockExpected, sR);
     sampleRate = sR;
   }
@@ -162,6 +167,7 @@ public:
 
     ////////////////////////////////////////
     // Get samples from the file to play back.
+
     transports[0]->getNextAudioBlock(bufferToFill);
   }
 
@@ -257,7 +263,10 @@ private:
 	  case Stopped:                         
 	    stopButton.setEnabled (false);
 	    playButton.setEnabled (true);
-	    transports[0]->setPosition (0.0);
+	    for(int i = 0; i < files.size(); ++i) {
+	      if(i < maxNumberOfFiles)
+		transports[0]->setPosition (0.0);
+	    }
 	    break;
                     
 	  case Starting:                        
@@ -270,8 +279,11 @@ private:
 	    playButton.setEnabled (false);
 	    break;
                     
-	  case Stopping:                        
-	    transports[0]->stop();
+	  case Stopping:
+	    for(int i = 0; i < files.size(); ++i) {
+	      if(i < maxNumberOfFiles)
+		transports[i]->stop();
+	    }
 	    break;
 	  }
       }
@@ -280,13 +292,17 @@ private:
   void startSources()
   {
     //    ScopedLock lock(deviceManager.getAudioCallbackLock());
+    // for(int i = 0; i < files.size(); ++i) {
+    //   if(i < maxNumberOfFiles)
+    // 	transports[i]->start();
+    // }
     transports[0]->start();
   }
+  
   void openButtonClicked()
   {
 
   }
-
     
   void playButtonClicked()
   {
@@ -295,21 +311,25 @@ private:
 
     // Array version
     int index = 0;
-    AudioFormatReader* reader;
-    reader = formatManager.createReaderFor(files[index]);
-    if (reader != nullptr)
-      {
-	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
-	transports[0]->setSource(source, 0, nullptr, reader->sampleRate);
-	readerSources.add(source.release());
-	playButton.setEnabled(true);
-      }
+    // for(int i = 0; i < files.size(); i++) {
+    //   if(i < maxNumberOfFiles)
+    // 	createReader(files[i], i);
+    // }
+    createReader(files[0], 0);
     changeState(Starting);
   }
 
-  void createReader(const File &file)
+  void createReader(const File &file, int i)
   {
-
+    AudioFormatReader* reader;
+    reader = formatManager.createReaderFor(file);
+    if (reader != nullptr)
+      {
+	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
+	transports[i]->setSource(source, 0, nullptr, reader->sampleRate);
+	readerSources.insert(i, source.release());
+	playButton.setEnabled(true);
+      }
   }
   
   void stopButtonClicked()
