@@ -14,8 +14,6 @@ class MainContentComponent : public AudioAppComponent,
 public:
   MainContentComponent() : state (Stopped),
 			   sampleRate (44100),
-			   nextSampleNum (0),
-			   activeWriter (nullptr),
 			   //			   mapper(&transportSource, true),
 			   audioSetupComp (deviceManager,
 			   		   0,     // minimum input channels
@@ -28,14 +26,15 @@ public:
 			   		   false) // hide advanced options
 
   {
-    //backgroundThread.startThread();
-
+    // Keep for the label.
     // addAndMakeVisible (titleLabel);
     // titleLabel.setFont (Font ("Geneva", 36.0f, Font::bold));
     // titleLabel.setText("Folk Song Lab", dontSendNotification);
     // titleLabel.setColour (Label::textColourId, Colours::white);
     // titleLabel.setJustificationType (Justification::centred);
-        
+
+    /////////////////////////////////////////
+    // Interface
     addAndMakeVisible (&playButton);
     playButton.setButtonText ("Play");
     playButton.addListener (this);
@@ -49,6 +48,7 @@ public:
     stopButton.setColour (TextButton::buttonColourId, Colours::red);
     stopButton.setEnabled (false);
 
+    //////////////////////
     // Diagnostics interface
     addAndMakeVisible (audioSetupComp);
     addAndMakeVisible (diagnosticsBox);
@@ -67,30 +67,36 @@ public:
     cpuUsageText.setJustificationType (Justification::right);
     addAndMakeVisible (&cpuUsageLabel);
     addAndMakeVisible (&cpuUsageText);
-
-    deviceManager.addChangeListener (this);
-    // Datadirectory
-    dataDir = "~/rosenberg";
-
+    
     setSize (800, 600);
     
-    
-    formatManager.registerBasicFormats();       // [1]
-    //    ts.addChangeListener (this);   // [2]
-    transports.add(new AudioTransportSource());
+    ////////////////////////////////////////
+    // Create TransportSources for all the files
+    for(int i = 0; i < maxNumberOfFiles; ++i) {
+      transports.add(new AudioTransportSource());
+    }
+
+    ////////////////////////////////////////
+    // Register listeners
+    // All files will be played at the same time so
+    // it is enough to add the changelisterner to the
+    // first instance of AudioTransportSource.
+    deviceManager.addChangeListener (this);
+    formatManager.registerBasicFormats();
     transports.getFirst()->addChangeListener(this);
-    
-    // Set the number of channels needed for this source.
+
+    ////////////////////////////////////////
+    // Set up audio and load files
     setAudioChannels (2, 2);
     //    mapper.setNumberOfChannelsToProduce(2);
-    //recorder.startRecording (file);
     File dir("~/rosenberg/audio");
     files = dir.findChildFiles(2, false, "*.wav");
     for(int i = 0; i < files.size(); i++)
       std::cout << files[i].getFileName() << std::endl;
-    int numOfSourceChannels = 2;
     
+    ////////////////////////////////////////
     // Make channel mapping interface
+    int numOfSourceChannels = 2;
     int startYPos = 420;
     int startXPos = 100;
     int Xindent = 100;
@@ -106,13 +112,14 @@ public:
 	routeChannel[i][j].setBounds(startXPos+(Xindent*i), startYPos+(Yindent*j), 80, 50);
       }
     }
-
   }
     
   ~MainContentComponent()
   {
-    deviceManager.removeChangeListener (this);
-    shutdownAudio();
+    //    readerSources.clear();
+    //    transports.clear();
+    //    deviceManager.removeChangeListener (this);
+    //    shutdownAudio();
   }
 
   void labelTextChanged (Label* label) override
@@ -120,16 +127,17 @@ public:
   }
   void prepareToPlay (int samplesPerBlockExpected, double sR) override
   {
-    // transportSource.prepareToPlay (samplesPerBlockExpected, sR);
-    // transportSourcei.prepareToPlay (samplesPerBlockExpected, sR);
+    ////////////////////////////////////////
+    // Mapper
     //    mapper.prepareToPlay (samplesPerBlockExpected, sR);
     //    mapper.setInputChannelMapping(0, 1);
     //    mapper.setInputChannelMapping(1, 1);
     //    mapper.setOutputChannelMapping(0, 0);
     //    mapper.setOutputChannelMapping(1, 1);
+    ////////////////////////////////////////
+    // Mixer
     // mixer.addInputSource(&transportSource, false);
     // mixer.addInputSource(&transportSourcei, false);
-    //    ts.prepareToPlay (samplesPerBlockExpected, sR);
     transports[0]->prepareToPlay(samplesPerBlockExpected, sR);
     sampleRate = sR;
   }
@@ -137,34 +145,30 @@ public:
   void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
   {
     auto* device = deviceManager.getCurrentAudioDevice();
-    
+    ////////////////////////////////////////
+    // Active channels in hardware
     const BigInteger activeInputChannels = device->getActiveInputChannels();
     const BigInteger activeOutputChannels = device->getActiveOutputChannels();
     const int maxInputChannels = activeInputChannels.getHighestBit() + 1;
     const int maxOutputChannels = activeOutputChannels.getHighestBit() + 1;
 
-    //    const float** inputChannelData
-    //    const ScopedLock sl(writerLock);
-    //    std::cout << "output channels: " << maxOutputChannels << std::endl;
-    //    std::cout << "input channels: " << maxInputChannels << std::endl;
+    ////////////////////////////////////////
+    // Cancel out data in inactive buffer
     // if (readerSource.get() == nullptr)
     // {
     //     bufferToFill.clearActiveBufferRegion();
     //     return;
     // }
 
-    // The play routine
+    ////////////////////////////////////////
     // Get samples from the file to play back.
     transports[0]->getNextAudioBlock(bufferToFill);
-    //    transportSource.getNextAudioBlock(bufferToFill);
   }
 
   void releaseResources() override
   {
     //    mapper.releaseResources();
-    //transportSource.releaseResources();
     transports[0]->releaseResources();
-      //    ts.releaseResources();
     sampleRate = 0;
   }
 
@@ -176,11 +180,8 @@ public:
   
   void resized() override
   {
-    //    titleLabel.centreWithSize(400, 400);
     titleLabel.setBounds(10, 0, 200, 100);
-    //    playButton.centreWithSize(80, 50);
     playButton.setBounds(100, 300, 80, 50);
-    //    stopButton.centreWithSize(80, 50);
     stopButton.setBounds(100, 360, 80, 50);
     auto rect = getLocalBounds();
 
@@ -214,8 +215,8 @@ public:
     if (button == &openButton)  openButtonClicked();
     if (button == &playButton)  playButtonClicked();
     if (button == &stopButton)  stopButtonClicked();
-    //    if (button == &recButton) recButtonClicked();
 
+    ////////////////////////////////////////
     // Routing happens here
     for(int i = 0; i<numOfSourceChannels; ++i) {
       for(int j = 0;j<getNumberOfHardwareOutputs(); ++j) {
@@ -234,7 +235,6 @@ public:
     	//	routeChannel[i][j].setBounds(startXPos+(Xindent*i), startYPos+(Yindent*j), 80, 50);
       }
     }
-
   }
 
 private:
@@ -271,9 +271,7 @@ private:
 	    break;
                     
 	  case Stopping:                        
-	    //	    ts.stop();
 	    transports[0]->stop();
-	    //	    transportSourcei.stop();
 	    break;
 	  }
       }
@@ -282,10 +280,7 @@ private:
   void startSources()
   {
     //    ScopedLock lock(deviceManager.getAudioCallbackLock());
-    //    ts.start();
-
     transports[0]->start();
-    //    transportSourcei.start();
   }
   void openButtonClicked()
   {
@@ -295,38 +290,18 @@ private:
     
   void playButtonClicked()
   {
-
-    //    AudioFormatReader* reader;
-    // AudioFormatReader* readeri;
-    //    auto file = File::getSpecialLocation (File::userDocumentsDirectory).getNonexistentChildFile ("AudioRecording", ".wav");
     int numOfFiles = files.size();
     int f = std::rand()%numOfFiles;
 
-    //    createReader(files[0]);
-    //    reader = formatManager.createReaderFor(files[0]);
-    // readeri = formatManager.createReaderFor(files[0]);
-
-    // if (reader != nullptr)
-    //   {
-    // 	int fileChannels = reader->numChannels;
-    // 	std::cout << fileChannels << std::endl;
-    // 	ScopedPointer<AudioFormatReaderSource> newSource = new AudioFormatReaderSource (reader, true);
-    // 	ts.setSource(newSource, 0, nullptr, reader->sampleRate);
-    // 	readerSource = newSource.release();
-    // 	playButton.setEnabled(true);
-    //   }
-
     // Array version
     int index = 0;
-    AudioFormatReader* r;
-    r = formatManager.createReaderFor(files[index]);
-    readers.add(r);
-    //    transports.add(new AudioTransportSource());
-    if (r != nullptr)
+    AudioFormatReader* reader;
+    reader = formatManager.createReaderFor(files[index]);
+    if (reader != nullptr)
       {
-	ScopedPointer<AudioFormatReaderSource> s = new AudioFormatReaderSource(r, true);
-	transports[0]->setSource(s, 0, nullptr, r->sampleRate);
-	readerSources.add(s.release());
+	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
+	transports[0]->setSource(source, 0, nullptr, reader->sampleRate);
+	readerSources.add(source.release());
 	playButton.setEnabled(true);
       }
     changeState(Starting);
@@ -334,14 +309,7 @@ private:
 
   void createReader(const File &file)
   {
-    AudioFormatReader* reader;
-    reader = formatManager.createReaderFor(file);
-    if(reader != nullptr)
-      {
-	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
-	ts.setSource(source, 0, nullptr, reader->sampleRate);
-	rs = source.release();
-      }
+
   }
   
   void stopButtonClicked()
@@ -405,28 +373,16 @@ private:
   Label titleLabel;
   String dataDir;
   double sampleRate;
-  int64 nextSampleNum;
-  CriticalSection writerLock;
-  ScopedPointer<AudioFormatWriter::ThreadedWriter> threadedWriter; 
-  AudioFormatWriter::ThreadedWriter* volatile activeWriter;
   AudioFormatManager formatManager;
-  ScopedPointer<AudioFormatReaderSource> readerSource;
-  ScopedPointer<AudioFormatReaderSource> readerSourcei;
-  ScopedPointer<AudioFormatReaderSource> rs;
-  AudioTransportSource transportSource;
-  AudioTransportSource* transportSourcei;
-  AudioTransportSource ts;
 
   int maxNumberOfFiles = 1;
   OwnedArray<AudioTransportSource> transports;
-  OwnedArray<AudioFormatReader> readers;
+  //  OwnedArray<AudioFormatReader> readers;
   OwnedArray<AudioFormatReaderSource> readerSources;
   
   MixerAudioSource mixer;
-  //  AudioSource audioSource;
   TransportState state;
   //  juce::ChannelRemappingAudioSource mapper;
-  //  TimeSliceThread backgroundThread; // the thread that will write our audio data to disk
   Array<File> files;
   int fileIndex = 0;
   int channelsInFile = 0;
