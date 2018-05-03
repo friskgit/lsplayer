@@ -139,12 +139,17 @@ public:
     // mixer.addInputSource(&transportSource, false);
     // mixer.addInputSource(&transportSourcei, false);
 
-    // for(int i = 0; i < files.size(); i++) {
-    //   if(i < maxNumberOfFiles)
-    // 	transports[i]->prepareToPlay(samplesPerBlockExpected, sR);
-    // }
-    transports[0]->prepareToPlay(samplesPerBlockExpected, sR);
+    for(int i = 0; i < files.size(); i++) {
+      if(i < maxNumberOfFiles) {
+    	transports[i]->prepareToPlay(samplesPerBlockExpected, sR);
+    	mixer.addInputSource(transports[i], false);
+      }
+    }
+    mixer.prepareToPlay(samplesPerBlockExpected, sR);
     sampleRate = sR;
+	
+    //    transports[0]->prepareToPlay(samplesPerBlockExpected, sR);
+    //    mixer.addInputSource(transports[0], false);
   }
 
   void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
@@ -168,7 +173,8 @@ public:
     ////////////////////////////////////////
     // Get samples from the file to play back.
 
-    transports[0]->getNextAudioBlock(bufferToFill);
+    //    transports[0]->getNextAudioBlock(bufferToFill);
+    mixer.getNextAudioBlock(bufferToFill);
   }
 
   void releaseResources() override
@@ -291,12 +297,13 @@ private:
 
   void startSources()
   {
-    //    ScopedLock lock(deviceManager.getAudioCallbackLock());
-    // for(int i = 0; i < files.size(); ++i) {
-    //   if(i < maxNumberOfFiles)
-    // 	transports[i]->start();
-    // }
-    transports[0]->start();
+    ScopedLock lock(deviceManager.getAudioCallbackLock());
+    for(int i = 0; i < files.size(); ++i) {
+      if(i < maxNumberOfFiles) {
+    	transports[i]->start();
+      }
+    }
+    //    transports[0]->start();
   }
   
   void openButtonClicked()
@@ -311,12 +318,13 @@ private:
 
     // Array version
     int index = 0;
-    // for(int i = 0; i < files.size(); i++) {
-    //   if(i < maxNumberOfFiles)
-    // 	createReader(files[i], i);
-    // }
-    createReader(files[0], 0);
+    for(int i = 0; i < files.size(); i++) {
+      if(i < maxNumberOfFiles)
+    	createReader(files[i], i);
+    }
+    //    createReader(files[0], 0);
     changeState(Starting);
+    //    logMessage("size of tranports: "+std::to_string(transports.size()));
   }
 
   void createReader(const File &file, int i)
@@ -395,7 +403,7 @@ private:
   double sampleRate;
   AudioFormatManager formatManager;
 
-  int maxNumberOfFiles = 1;
+  int maxNumberOfFiles = 4;
   OwnedArray<AudioTransportSource> transports;
   //  OwnedArray<AudioFormatReader> readers;
   OwnedArray<AudioFormatReaderSource> readerSources;
