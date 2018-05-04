@@ -14,7 +14,6 @@ class MainContentComponent : public AudioAppComponent,
 public:
   MainContentComponent() : state (Stopped),
 			   sampleRate (44100),
-			   //			   mapper(&transportSource, true),
 			   audioSetupComp (deviceManager,
 			   		   0,     // minimum input channels
 			   		   maxChannels,   // maximum input channels
@@ -74,7 +73,15 @@ public:
     // Create TransportSources for all the files
     for(int i = 0; i < maxNumberOfFiles; ++i) {
       transports.add(new AudioTransportSource());
+      transports[i]->addChangeListener(this);
     }
+    mapper = new ChannelRemappingAudioSource(transports[0], false);
+					     
+    mapper->setInputChannelMapping(0, 0);
+    mapper->setInputChannelMapping(1, 1);
+    mapper->setOutputChannelMapping(0, 0);
+    mapper->setOutputChannelMapping(1, 0);
+
 
     ////////////////////////////////////////
     // Register listeners
@@ -83,12 +90,12 @@ public:
     // first instance of AudioTransportSource.
     deviceManager.addChangeListener (this);
     formatManager.registerBasicFormats();
-    transports.getFirst()->addChangeListener(this);
+    //    transports.getFirst()->addChangeListener(this);
 
     ////////////////////////////////////////
     // Set up audio and load files
     setAudioChannels (2, 2);
-    //    mapper.setNumberOfChannelsToProduce(2);
+    mapper->setNumberOfChannelsToProduce(2);
     File dir("~/rosenberg/audio");
     files = dir.findChildFiles(2, false, "*.wav");
     for(int i = 0; i < files.size(); i++)
@@ -128,24 +135,22 @@ public:
   void prepareToPlay (int samplesPerBlockExpected, double sR) override
   {
     ////////////////////////////////////////
-    // Mapper
-    //    mapper.prepareToPlay (samplesPerBlockExpected, sR);
-    //    mapper.setInputChannelMapping(0, 1);
-    //    mapper.setInputChannelMapping(1, 1);
-    //    mapper.setOutputChannelMapping(0, 0);
-    //    mapper.setOutputChannelMapping(1, 1);
-    ////////////////////////////////////////
     // Mixer
     // mixer.addInputSource(&transportSource, false);
     // mixer.addInputSource(&transportSourcei, false);
 
     for(int i = 0; i < files.size(); i++) {
       if(i < maxNumberOfFiles) {
-    	transports[i]->prepareToPlay(samplesPerBlockExpected, sR);
-    	mixer.addInputSource(transports[i], false);
+	//    	transports[i]->prepareToPlay(samplesPerBlockExpected, sR);
+	//    	mixer.addInputSource(transports[i], false);
       }
     }
+    mixer.addInputSource(mapper, false);
     mixer.prepareToPlay(samplesPerBlockExpected, sR);
+    ////////////////////////////////////////
+    // Mapper
+    //    mapper->prepareToPlay (samplesPerBlockExpected, sR);
+    //    transports[0]->prepareToPlay(samplesPerBlockExpected, sR);
     sampleRate = sR;
 	
     //    transports[0]->prepareToPlay(samplesPerBlockExpected, sR);
@@ -297,10 +302,10 @@ private:
 
   void startSources()
   {
-    ScopedLock lock(deviceManager.getAudioCallbackLock());
+    //    ScopedLock lock(deviceManager.getAudioCallbackLock());
     for(int i = 0; i < files.size(); ++i) {
       if(i < maxNumberOfFiles) {
-    	transports[i]->start();
+	transports[i]->start();
       }
     }
     //    transports[0]->start();
@@ -403,14 +408,14 @@ private:
   double sampleRate;
   AudioFormatManager formatManager;
 
-  int maxNumberOfFiles = 4;
+  int maxNumberOfFiles = 1;
   OwnedArray<AudioTransportSource> transports;
   //  OwnedArray<AudioFormatReader> readers;
   OwnedArray<AudioFormatReaderSource> readerSources;
   
   MixerAudioSource mixer;
   TransportState state;
-  //  juce::ChannelRemappingAudioSource mapper;
+  juce::ChannelRemappingAudioSource *mapper;
   Array<File> files;
   int fileIndex = 0;
   int channelsInFile = 0;
