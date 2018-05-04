@@ -74,13 +74,16 @@ public:
     for(int i = 0; i < maxNumberOfFiles; ++i) {
       transports.add(new AudioTransportSource());
       transports[i]->addChangeListener(this);
+      mapper.add(new ChannelRemappingAudioSource(transports[i], false));
+      mapper[i]->setNumberOfChannelsToProduce(2);
+      mapper[i]->setOutputChannelMapping(0, 0);
+      mapper[i]->setOutputChannelMapping(1, 1);
     }
-    mapper = new ChannelRemappingAudioSource(transports[0], false);
-					     
-    mapper->setInputChannelMapping(0, 0);
-    mapper->setInputChannelMapping(1, 1);
-    mapper->setOutputChannelMapping(0, 0);
-    mapper->setOutputChannelMapping(1, 0);
+      
+    // mapper[0]->setInputChannelMapping(0, 0);
+    // mapper[0]->setInputChannelMapping(1, 1);
+    // mapper[0]->setOutputChannelMapping(0, 0);
+    // mapper[0]->setOutputChannelMapping(1, 0);
 
 
     ////////////////////////////////////////
@@ -95,7 +98,6 @@ public:
     ////////////////////////////////////////
     // Set up audio and load files
     setAudioChannels (2, 2);
-    mapper->setNumberOfChannelsToProduce(2);
     File dir("~/rosenberg/audio");
     files = dir.findChildFiles(2, false, "*.wav");
     for(int i = 0; i < files.size(); i++)
@@ -139,13 +141,12 @@ public:
     // mixer.addInputSource(&transportSource, false);
     // mixer.addInputSource(&transportSourcei, false);
 
-    for(int i = 0; i < files.size(); i++) {
-      if(i < maxNumberOfFiles) {
+    for(int i = 0; i < mapper.size(); i++) {
+      mixer.addInputSource(mapper[i], false);
+
 	//    	transports[i]->prepareToPlay(samplesPerBlockExpected, sR);
 	//    	mixer.addInputSource(transports[i], false);
-      }
     }
-    mixer.addInputSource(mapper, false);
     mixer.prepareToPlay(samplesPerBlockExpected, sR);
     ////////////////////////////////////////
     // Mapper
@@ -274,10 +275,7 @@ private:
 	  case Stopped:                         
 	    stopButton.setEnabled (false);
 	    playButton.setEnabled (true);
-	    for(int i = 0; i < files.size(); ++i) {
-	      if(i < maxNumberOfFiles)
-		transports[0]->setPosition (0.0);
-	    }
+	    setPosition(0.0);
 	    break;
                     
 	  case Starting:                        
@@ -302,13 +300,20 @@ private:
 
   void startSources()
   {
-    //    ScopedLock lock(deviceManager.getAudioCallbackLock());
+    ScopedLock lock(deviceManager.getAudioCallbackLock());
     for(int i = 0; i < files.size(); ++i) {
       if(i < maxNumberOfFiles) {
 	transports[i]->start();
       }
     }
-    //    transports[0]->start();
+  }
+
+  void setPosition(float pos)
+  {
+    for(int i = 0; i < files.size(); ++i) {
+      if(i < maxNumberOfFiles)
+	transports[i]->setPosition (pos);
+    }
   }
   
   void openButtonClicked()
@@ -400,27 +405,15 @@ private:
     diagnosticsBox.insertTextAtCaret (m + newLine);
   }
   //==========================================================================
+  // GUI
   TextButton openButton;
   TextButton playButton;
   TextButton stopButton;
   Label titleLabel;
   String dataDir;
   double sampleRate;
-  AudioFormatManager formatManager;
-
-  int maxNumberOfFiles = 1;
-  OwnedArray<AudioTransportSource> transports;
-  //  OwnedArray<AudioFormatReader> readers;
-  OwnedArray<AudioFormatReaderSource> readerSources;
-  
-  MixerAudioSource mixer;
-  TransportState state;
-  juce::ChannelRemappingAudioSource *mapper;
-  Array<File> files;
-  int fileIndex = 0;
-  int channelsInFile = 0;
-  const static int maxChannels = 64;
-  const static int sourceChannels = 2;
+  Slider frequencySlider;
+  Label  frequencyLabel;
 
   AudioDeviceSelectorComponent audioSetupComp;
   Label cpuUsageLabel;
@@ -428,8 +421,22 @@ private:
   Label channelNames[sourceChannels];
   TextEditor diagnosticsBox;
   ToggleButton routeChannel[sourceChannels][maxChannels];
-
   
+  // Audio
+  AudioFormatManager formatManager;
+  int maxNumberOfFiles = 4;
+  OwnedArray<AudioTransportSource> transports;
+  OwnedArray<AudioFormatReaderSource> readerSources;
+  OwnedArray<ChannelRemappingAudioSource> mapper;
+  
+  MixerAudioSource mixer;
+  TransportState state;
+  Array<File> files;
+  int fileIndex = 0;
+  int channelsInFile = 0;
+  const static int maxChannels = 64;
+  const static int sourceChannels = 2;
+
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
 
