@@ -8,7 +8,8 @@
 class MainContentComponent : public AudioAppComponent,
 			     public ChangeListener,
 			     public Button::Listener,
-			     private Label::Listener
+			     private Label::Listener,
+			     public Slider::Listener
 			     //private Timer
 {
 public:
@@ -38,8 +39,7 @@ public:
     playButton.setButtonText ("Play");
     playButton.addListener (this);
     playButton.setColour (TextButton::buttonColourId, Colours::green);
-    // playButton.setSize(200, 200);
-    playButton.setEnabled (true);
+    playButton.setEnabled (false);
 
     addAndMakeVisible (&stopButton);
     stopButton.setButtonText ("Stop");
@@ -47,6 +47,11 @@ public:
     stopButton.setColour (TextButton::buttonColourId, Colours::red);
     stopButton.setEnabled (false);
 
+    addAndMakeVisible (&openButton);
+    openButton.setButtonText ("Load");
+    openButton.addListener (this);
+    openButton.setColour (TextButton::buttonColourId, Colours::green);
+    openButton.setEnabled (true);
     //////////////////////
     // Diagnostics interface
     addAndMakeVisible (audioSetupComp);
@@ -70,7 +75,7 @@ public:
     setSize (800, 600);
     
     ////////////////////////////////////////
-    // Create TransportSources for all the files
+    // Create TransportSources and Labels for all the files
     for(int i = 0; i < maxNumberOfFiles; ++i) {
       transports.add(new AudioTransportSource());
       transports[i]->addChangeListener(this);
@@ -79,21 +84,11 @@ public:
       mapper[i]->setOutputChannelMapping(0, 0);
       mapper[i]->setOutputChannelMapping(1, 1);
     }
-      
-    // mapper[0]->setInputChannelMapping(0, 0);
-    // mapper[0]->setInputChannelMapping(1, 1);
-    // mapper[0]->setOutputChannelMapping(0, 0);
-    // mapper[0]->setOutputChannelMapping(1, 0);
-
 
     ////////////////////////////////////////
     // Register listeners
-    // All files will be played at the same time so
-    // it is enough to add the changelisterner to the
-    // first instance of AudioTransportSource.
     deviceManager.addChangeListener (this);
     formatManager.registerBasicFormats();
-    //    transports.getFirst()->addChangeListener(this);
 
     ////////////////////////////////////////
     // Set up audio and load files
@@ -102,7 +97,22 @@ public:
     files = dir.findChildFiles(2, false, "*.wav");
     for(int i = 0; i < files.size(); i++)
       std::cout << files[i].getFileName() << std::endl;
-    
+
+    ////////////////////////////////////////
+    // Set up the file position slider
+    addAndMakeVisible(positionSlider);
+    positionSlider.setRange(0, 600);
+    positionSlider.setTextValueSuffix("sec");
+    positionSlider.addListener(this);
+    positionSlider.setValue(0);
+    positionSlider.setNumDecimalPlacesToDisplay(2);
+
+    addAndMakeVisible(currentPosition);
+    currentPosition.setText("Position:", dontSendNotification);
+    currentPosition.attachToComponent(&positionSlider, true);
+
+    sliderEnabled(false);
+
     ////////////////////////////////////////
     // Make channel mapping interface
     int numOfSourceChannels = 2;
@@ -198,11 +208,16 @@ public:
   
   void resized() override
   {
+    auto left = 168;
+    auto vert = 300; 
+    positionSlider.setBounds (left+1, 268, getWidth() - left - 337, 20);
+    
     titleLabel.setBounds(10, 0, 200, 100);
-    playButton.setBounds(100, 300, 80, 50);
-    stopButton.setBounds(100, 360, 80, 50);
-    auto rect = getLocalBounds();
+    playButton.setBounds(left, vert, 80, 50);
+    stopButton.setBounds(left+104, vert, 80, 50);
+    openButton.setBounds(left+207, vert, 80, 50);
 
+    auto rect = getLocalBounds();
     audioSetupComp.setBounds (rect.removeFromLeft (proportionOfWidth (0.6f)));
     rect.reduce (10, 10);
 
@@ -212,6 +227,17 @@ public:
     rect.removeFromTop (20);
 
     diagnosticsBox.setBounds (rect);
+
+    ////////////////////////////////////////
+    // Place the soundfiles in the interface
+    for(int i=0; i<fileNameLabels.size(); i++) {
+      Label *l = fileNameLabels[i];
+      int vertSpace = 20*i;
+      if(l != nullptr) {
+	l->setBounds(left-150, vert+40+vertSpace, 140, 50);
+	l->setJustificationType(Justification::centredRight);
+      }
+    }
   }
     
   void changeListenerCallback (ChangeBroadcaster* source) override
@@ -219,9 +245,9 @@ public:
     if (source == transports[0])
       {
 	if (transports[0]->isPlaying())
-	  changeState (Playing);
+	  changeState(Playing);
 	else
-	  changeState (Stopped);
+	  changeState(Stopped);
       }
     dumpDeviceInfo();
   }
@@ -312,41 +338,47 @@ private:
   {
     for(int i = 0; i < files.size(); ++i) {
       if(i < maxNumberOfFiles)
-	transports[i]->setPosition (pos);
+	transports[i]->setPosition(pos);
     }
   }
   
   void openButtonClicked()
   {
+    int numOfFiles = files.size();
+    int f = std::rand()%numOfFiles;
+    double length = 0;
 
+    for(int i = 0; i < files.size(); i++) {
+      if(i < maxNumberOfFiles) {
+    	createReader(files[i], i);
+      	if(length < transports[i]->getLengthInSeconds())
+	  length = transports[i]->getLengthInSeconds();
+	logMessage(files[i].getFileName());
+	fileNameLabels.add(new Label(files[i].getFileName(), files[i].getFileName()));
+	addAndMakeVisible(fileNameLabels[i]);
+	resized();
+      }
+    }
+    sliderSetRange(0, length);
+    sliderEnabled(true);
+    playButton.setEnabled (true);
   }
     
   void playButtonClicked()
   {
-    int numOfFiles = files.size();
-    int f = std::rand()%numOfFiles;
-
-    // Array version
-    int index = 0;
-    for(int i = 0; i < files.size(); i++) {
-      if(i < maxNumberOfFiles)
-    	createReader(files[i], i);
-    }
-    //    createReader(files[0], 0);
     changeState(Starting);
-    //    logMessage("size of tranports: "+std::to_string(transports.size()));
   }
 
   void createReader(const File &file, int i)
   {
     AudioFormatReader* reader;
     reader = formatManager.createReaderFor(file);
+
     if (reader != nullptr)
       {
 	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
 	transports[i]->setSource(source, 0, nullptr, reader->sampleRate);
 	readerSources.insert(i, source.release());
-	playButton.setEnabled(true);
       }
   }
   
@@ -405,23 +437,40 @@ private:
     diagnosticsBox.insertTextAtCaret (m + newLine);
   }
   //==========================================================================
-  // GUI
-  TextButton openButton;
-  TextButton playButton;
-  TextButton stopButton;
-  Label titleLabel;
-  String dataDir;
-  double sampleRate;
-  Slider frequencySlider;
-  Label  frequencyLabel;
 
-  AudioDeviceSelectorComponent audioSetupComp;
-  Label cpuUsageLabel;
-  Label cpuUsageText;
-  Label channelNames[sourceChannels];
-  TextEditor diagnosticsBox;
-  ToggleButton routeChannel[sourceChannels][maxChannels];
+  void sliderValueChanged(Slider *slider) override
+  {
+  }
   
+  void 	sliderDragStarted (Slider *slider) override
+  {
+
+  }
+
+  void sliderDragEnded (Slider *slider) override
+  {
+    if(slider == &positionSlider) {
+      setPosition(slider->getValue());
+      //      logMessage(std::to_string(slider->getValue()));
+      //      logMessage(std::to_string(static_cast<int>(slider->getValue())));
+      //      int 
+      //      positionSlider.setValue(
+    }
+  }
+
+  void sliderSetRange(double min, double max)
+  {
+    positionSlider.setRange(min, max);
+    positionSlider.setNumDecimalPlacesToDisplay(2);
+  }
+  
+  void sliderEnabled(bool value)
+  {
+    positionSlider.setEnabled(value);
+    currentPosition.setEnabled(value);
+  }
+  //==========================================================================
+
   // Audio
   AudioFormatManager formatManager;
   int maxNumberOfFiles = 4;
@@ -437,6 +486,24 @@ private:
   const static int maxChannels = 64;
   const static int sourceChannels = 2;
 
+  // GUI
+  TextButton openButton;
+  TextButton playButton;
+  TextButton stopButton;
+  Label titleLabel;
+  OwnedArray<Label> fileNameLabels;
+  String dataDir;
+  double sampleRate;
+  Slider positionSlider;
+  Label  currentPosition;
+
+  AudioDeviceSelectorComponent audioSetupComp;
+  Label cpuUsageLabel;
+  Label cpuUsageText;
+  Label channelNames[sourceChannels];
+  TextEditor diagnosticsBox;
+  ToggleButton routeChannel[sourceChannels][maxChannels];
+  
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
 
