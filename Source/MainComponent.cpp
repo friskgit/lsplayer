@@ -113,24 +113,6 @@ public:
 
     sliderEnabled(false);
 
-    ////////////////////////////////////////
-    // Make channel mapping interface
-    int numOfSourceChannels = 2;
-    int startYPos = 420;
-    int startXPos = 100;
-    int Xindent = 100;
-    int Yindent = 30;
-    for(int i = 0; i<numOfSourceChannels; ++i) {
-      addAndMakeVisible(channelNames[i]);
-      channelNames[i].setText("Channel "+std::to_string(i), dontSendNotification);
-      channelNames[i].setBounds(startXPos+(Xindent*i), startYPos-10, 80, 30);
-      for(int j = 0;j<getNumberOfHardwareOutputs(); ++j) {
-	addAndMakeVisible(routeChannel[i][j]);
-	routeChannel[i][j].setButtonText(TRANS("Output "+std::to_string(j)));
-	routeChannel[i][j].addListener(this);
-	routeChannel[i][j].setBounds(startXPos+(Xindent*i), startYPos+(Yindent*j), 80, 50);
-      }
-    }
   }
     
   ~MainContentComponent()
@@ -143,7 +125,9 @@ public:
 
   void labelTextChanged (Label* label) override
   {
+    
   }
+  
   void prepareToPlay (int samplesPerBlockExpected, double sR) override
   {
     ////////////////////////////////////////
@@ -234,7 +218,8 @@ public:
       Label *l = fileNameLabels[i];
       int vertSpace = 20*i;
       if(l != nullptr) {
-	l->setBounds(left-150, vert+40+vertSpace, 140, 50);
+	l->setBounds(left-150, vert+80+vertSpace, 140, 50);
+	l->setFont(Font ("Geneva", 12.0f, Font::plain));
 	l->setJustificationType(Justification::centredRight);
       }
     }
@@ -341,13 +326,27 @@ private:
 	transports[i]->setPosition(pos);
     }
   }
-  
+
   void openButtonClicked()
   {
     int numOfFiles = files.size();
     int f = std::rand()%numOfFiles;
     double length = 0;
+    int numOfSourceChannels = 2;
+    int startYPos = 380;
+    int startXPos = 168;
+    int columnWidth = 50;
+    int rowHeight = 20;
+    String label = "Ch.";
+    // Make headers for the output channel numbers
+    for(int g = 0; g<getNumberOfHardwareOutputs(); g++) {
+      addAndMakeVisible(channelNames[g]);
+      channelNames[g].setText(label+std::to_string(g+1), dontSendNotification);
+      channelNames[g].setFont(Font ("Geneva", 12.0f, Font::plain));
+      channelNames[g].setBounds(startXPos+(columnWidth*g)-3, startYPos-20, 40, 20);
+    }
 
+    // Print the filenames
     for(int i = 0; i < files.size(); i++) {
       if(i < maxNumberOfFiles) {
     	createReader(files[i], i);
@@ -356,9 +355,25 @@ private:
 	logMessage(files[i].getFileName());
 	fileNameLabels.add(new Label(files[i].getFileName(), files[i].getFileName()));
 	addAndMakeVisible(fileNameLabels[i]);
-	resized();
+
+	////////////////////////////////////////
+	// Make channel mapping interface
+	//	for(int j = 0; j<channelsPerFile[i]; ++j) {
+	for(int j = 0; j<2; ++j) {
+	  //	  for(int k = 0;k<getNumberOfHardwareOutputs(); ++k) {
+	  for(int k = 0;k<4; ++k) {
+	    //	    std::cout << j << std::endl;
+	    ToggleButton *b = new ToggleButton();
+	    addAndMakeVisible(b);
+	    b->setBounds(startXPos+(columnWidth*k), startYPos+(rowHeight*j)+(rowHeight*i), 30, 30);
+	    b->setTooltip("Route channel "+std::to_string(j)+" to output "+std::to_string(k));
+	    b->addListener(this);
+	  }
+	}
       }
     }
+    resized();
+
     sliderSetRange(0, length);
     sliderEnabled(true);
     playButton.setEnabled (true);
@@ -373,7 +388,9 @@ private:
   {
     AudioFormatReader* reader;
     reader = formatManager.createReaderFor(file);
-
+    //    channelsPerFile[i] = reader->numChannels;
+    channelsPerFile[i] = 4;
+    //    logMessage(std::to_string(reader->numChannels));
     if (reader != nullptr)
       {
 	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
@@ -451,10 +468,6 @@ private:
   {
     if(slider == &positionSlider) {
       setPosition(slider->getValue());
-      //      logMessage(std::to_string(slider->getValue()));
-      //      logMessage(std::to_string(static_cast<int>(slider->getValue())));
-      //      int 
-      //      positionSlider.setValue(
     }
   }
 
@@ -473,7 +486,7 @@ private:
 
   // Audio
   AudioFormatManager formatManager;
-  int maxNumberOfFiles = 4;
+  int maxNumberOfFiles = 18;
   OwnedArray<AudioTransportSource> transports;
   OwnedArray<AudioFormatReaderSource> readerSources;
   OwnedArray<ChannelRemappingAudioSource> mapper;
@@ -484,7 +497,8 @@ private:
   int fileIndex = 0;
   int channelsInFile = 0;
   const static int maxChannels = 64;
-  const static int sourceChannels = 2;
+  const static int sourceChannels = 4;
+  int channelsPerFile[maxChannels];
 
   // GUI
   TextButton openButton;
