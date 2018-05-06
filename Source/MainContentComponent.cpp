@@ -1,16 +1,16 @@
-#include "MainComponent.h"
+#include "MainContentComponent.h"
 
-MainContentComponent() : state (Stopped),
-			   sampleRate (44100),
-			   audioSetupComp (deviceManager,
-			   		   0,     // minimum input channels
-			   		   maxChannels,   // maximum input channels
-			   		   0,     // minimum output channels
-			   		   maxChannels,   // maximum output channels
-			   		   false, // ability to select midi inputs
-			   		   false, // ability to select midi output device
-			   		   false, // treat channels as stereo pairs
-			   		   false) // hide advanced options
+MainContentComponent::MainContentComponent() : state (Stopped),
+					       sampleRate (44100),
+					       audioSetupComp (deviceManager,
+							       0,     // minimum input channels
+							       maxChannels,   // maximum input channels
+							       0,     // minimum output channels
+							       maxChannels,   // maximum output channels
+							       false, // ability to select midi inputs
+							       false, // ability to select midi output device
+							       false, // treat channels as stereo pairs
+							       false) // hide advanced options
 
   {
     // Keep for the label.
@@ -104,7 +104,7 @@ MainContentComponent() : state (Stopped),
 
   }
     
-  ~MainContentComponent()
+MainContentComponent::~MainContentComponent()
   {
     //    readerSources.clear();
     //    transports.clear();
@@ -112,12 +112,7 @@ MainContentComponent() : state (Stopped),
     //    shutdownAudio();
   }
 
-  void labelTextChanged (Label* label) override
-  {
-    
-  }
-  
-  void prepareToPlay (int samplesPerBlockExpected, double sR) override
+  void MainContentComponent::prepareToPlay (int samplesPerBlockExpected, double sR)
   {
     ////////////////////////////////////////
     // Mixer
@@ -141,7 +136,7 @@ MainContentComponent() : state (Stopped),
     //    mixer.addInputSource(transports[0], false);
   }
 
-  void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
+  void MainContentComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) 
   {
     auto* device = deviceManager.getCurrentAudioDevice();
     ////////////////////////////////////////
@@ -166,20 +161,20 @@ MainContentComponent() : state (Stopped),
     mixer.getNextAudioBlock(bufferToFill);
   }
 
-  void releaseResources() override
+  void MainContentComponent::releaseResources() 
   {
     //    mapper.releaseResources();
     transports[0]->releaseResources();
     sampleRate = 0;
   }
 
-  void paint (Graphics& g) override
+  void MainContentComponent::paint (Graphics& g) 
   {
     g.setColour (Colours::grey);
     g.fillRect (getLocalBounds().removeFromRight (proportionOfWidth (0.4f)));
   }
   
-  void resized() override
+  void MainContentComponent::resized() 
   {
     auto left = xPosInterface;
     auto vert = yPosInterface;; 
@@ -218,7 +213,7 @@ MainContentComponent() : state (Stopped),
     }
   }
     
-  void changeListenerCallback (ChangeBroadcaster* source) override
+  void MainContentComponent::changeListenerCallback (ChangeBroadcaster* source) 
   {
     if (source == transports[0])
       {
@@ -230,7 +225,7 @@ MainContentComponent() : state (Stopped),
     dumpDeviceInfo();
   }
 
-  void buttonClicked (Button* button) override
+  void MainContentComponent::buttonClicked (Button* button) 
   {
     int numOfSourceChannels = 2;
     int outOfBounds = 256;
@@ -260,7 +255,6 @@ MainContentComponent() : state (Stopped),
     }
   }
 
-private:
   enum TransportState
     {
      Stopped,
@@ -269,7 +263,7 @@ private:
      Stopping
     };
 
-  void changeState (TransportState newState)
+  void MainContentComponent::changeState (TransportState newState)
   {
     if (state != newState)
       {
@@ -303,7 +297,7 @@ private:
       }
   }
 
-  void startSources()
+  void MainContentComponent::startSources()
   {
     ScopedLock lock(deviceManager.getAudioCallbackLock());
     for(int i = 0; i < files.size(); ++i) {
@@ -313,7 +307,7 @@ private:
     }
   }
 
-  void setPosition(float pos)
+  void MainContentComponent::setPosition(float pos)
   {
     for(int i = 0; i < files.size(); ++i) {
       if(i < maxNumberOfFiles)
@@ -321,7 +315,7 @@ private:
     }
   }
 
-  void openButtonClicked()
+  void MainContentComponent::openButtonClicked()
   {
     int numOfFiles = files.size();
     int f = std::rand()%numOfFiles;
@@ -375,12 +369,12 @@ private:
     playButton.setEnabled (true);
   }
     
-  void playButtonClicked()
+  void MainContentComponent::playButtonClicked()
   {
     changeState(Starting);
   }
 
-  void createReader(const File &file, int i)
+  void MainContentComponent::createReader(const File &file, int i)
   {
     AudioFormatReader* reader;
     reader = formatManager.createReaderFor(file);
@@ -394,12 +388,12 @@ private:
       }
   }
   
-  void stopButtonClicked()
+  void MainContentComponent::stopButtonClicked()
   {
     changeState (Stopping);
   }
 
-  static String getListOfActiveBits (const BigInteger& b)
+  String MainContentComponent::getListOfActiveBits (const BigInteger& b)
   {
     StringArray bits;
     
@@ -410,7 +404,7 @@ private:
     return bits.joinIntoString (", ");
   }
 
-  void dumpDeviceInfo()
+  void MainContentComponent::dumpDeviceInfo()
   {
     logMessage ("--------------------------------------");
     logMessage ("Current audio device type: " + (deviceManager.getCurrentDeviceTypeObject() != nullptr
@@ -435,7 +429,7 @@ private:
     logMessage((String)getNumberOfHardwareOutputs());
   }
 
-  int getNumberOfHardwareOutputs()
+  int MainContentComponent::getNumberOfHardwareOutputs()
   {
     auto* device = deviceManager.getCurrentAudioDevice();
     const BigInteger ch = device->getActiveOutputChannels();
@@ -446,36 +440,36 @@ private:
       return activeChannels;
   }
   
-  void logMessage (const String& m)
+  void MainContentComponent::logMessage (const String& m)
   {
     diagnosticsBox.moveCaretToEnd();
     diagnosticsBox.insertTextAtCaret (m + newLine);
   }
   //==========================================================================
 
-  void sliderValueChanged(Slider *slider) override
+  void MainContentComponent::sliderValueChanged(Slider *slider) 
   {
   }
   
-  void 	sliderDragStarted (Slider *slider) override
+  void MainContentComponent::sliderDragStarted (Slider *slider) 
   {
 
   }
 
-  void sliderDragEnded (Slider *slider) override
+  void MainContentComponent::sliderDragEnded (Slider *slider) 
   {
     if(slider == &positionSlider) {
       setPosition(slider->getValue());
     }
   }
 
-  void sliderSetRange(double min, double max)
+  void MainContentComponent::sliderSetRange(double min, double max)
   {
     positionSlider.setRange(min, max);
     positionSlider.setNumDecimalPlacesToDisplay(2);
   }
   
-  void sliderEnabled(bool value)
+  void MainContentComponent::sliderEnabled(bool value)
   {
     positionSlider.setEnabled(value);
     currentPosition.setEnabled(value);

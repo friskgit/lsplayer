@@ -12,18 +12,23 @@
 #include "OSCInterface.h"
 
 //==============================================================================
-OSCInterface::OSCInterface()
+OSCInterface::OSCInterface() : receivePort(9001), sendPort(9000)
 {
-  // specify here on which UDP port number to receive incoming OSC messages
-  if (! connect (9001))                   // [3]
-    //    showConnectionErrorMessage ("Error: could not connect to UDP port 9001.");
-    std::cout << "Error: could not connect to UDP port 9001." << std::endl;
-  // tell the component to listen for OSC messages matching this address:
-  addListener (this, "/juce"); // [4]
+
 }
 
 OSCInterface::~OSCInterface() {}
 
+void OSCInterface::init() 
+{
+  // specify here on which UDP port number to receive incoming OSC messages
+  if (! connect (receivePort))
+    //    showConnectionErrorMessage ("Error: could not connect to UDP port 9001.");
+    std::cout << "Error: could not connect to UDP port 9001." << std::endl;
+  // tell the component to listen for OSC messages matching this address:
+  addListener (this, "/juce");
+}
+  
 void OSCInterface::oscMessageReceived(const OSCMessage& message)
 {
   if (message.size() == 1 && message[0].isFloat32())

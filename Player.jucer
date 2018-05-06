@@ -6,11 +6,13 @@
               splashScreenColour="Dark" cppLanguageStandard="11" companyCopyright="">
   <MAINGROUP id="BNpHuD" name="Player">
     <GROUP id="{B1795414-5B06-F2B5-EC13-A53FD0B4EDE6}" name="Source">
+      <FILE id="GZcIWr" name="MainContentComponent.h" compile="0" resource="0"
+            file="Source/MainContentComponent.h"/>
+      <FILE id="pTSmlL" name="MainContentComponent.cpp" compile="1" resource="0"
+            file="Source/MainContentComponent.cpp"/>
       <FILE id="DJLzyj" name="OSCInterface.cpp" compile="1" resource="0"
             file="Source/OSCInterface.cpp"/>
       <FILE id="PowTUQ" name="OSCInterface.h" compile="0" resource="0" file="Source/OSCInterface.h"/>
-      <FILE id="cC08GH" name="MainComponent.cpp" compile="1" resource="0"
-            file="Source/MainComponent.cpp"/>
       <FILE id="zBHHmU" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
   </MAINGROUP>

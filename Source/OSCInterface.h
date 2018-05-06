@@ -8,6 +8,9 @@
 #define OSCINTERFACE_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
+//#include "./MainComponent.cpp"
+
+#pragma once
 
 //==============================================================================
 /**
@@ -24,14 +27,16 @@ public:
 
   //==============================================================================
 
-  //  void init(const File &file);
+  void init();
 
 private:
   void oscMessageReceived (const OSCMessage& message) override;
-  // void showConnectionErrorMessage (const String& messageText);
-  void 
+  //  void showConnectionErrorMessage (const String& messageText);
 
   //==============================================================================
+  //  MainContentComponent *mainWindow;
+  int receivePort;// = 9001;
+  int sendPort;// = 9000;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OSCInterface)
 };
 
