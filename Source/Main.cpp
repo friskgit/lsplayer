@@ -9,15 +9,16 @@
 */
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "./OSCInterface.h"
 
 Component* createMainContentComponent();
 
 //==============================================================================
-class Audio_AudioBasics_Player  : public JUCEApplication
+class Player  : public JUCEApplication
 {
 public:
   //==============================================================================
-  Audio_AudioBasics_Player() {}
+  Player() {}
 
   const String getApplicationName() override       { return ProjectInfo::projectName; }
   const String getApplicationVersion() override    { return ProjectInfo::versionString; }
@@ -99,4 +100,4 @@ private:
 
 //==============================================================================
 // This macro generates the main() routine that launches the app.
-START_JUCE_APPLICATION (Audio_AudioBasics_Player)
+START_JUCE_APPLICATION (Player)

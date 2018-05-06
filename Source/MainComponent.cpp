@@ -2,13 +2,13 @@
 #define MAINCOMPONENT_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "./OSCInterface.h"
 
 class MainContentComponent : public AudioAppComponent,
 			     public ChangeListener,
 			     public Button::Listener,
 			     private Label::Listener,
 			     public Slider::Listener
-			     //private Timer
 {
 public:
   MainContentComponent() : state (Stopped),
@@ -529,7 +529,8 @@ private:
   Label channelNames[sourceChannels];
   TextEditor diagnosticsBox;
   ToggleButton *routeChannel[maxFiles][sourceChannels][maxChannels];
-  
+
+  OSCInterface osc;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
 

@@ -6,9 +6,9 @@
               splashScreenColour="Dark" cppLanguageStandard="11" companyCopyright="">
   <MAINGROUP id="BNpHuD" name="Player">
     <GROUP id="{B1795414-5B06-F2B5-EC13-A53FD0B4EDE6}" name="Source">
-      <FILE id="GyDetG" name="Interface.cpp" compile="1" resource="0" file="Source/Interface.cpp"
-            xcodeResource="1"/>
-      <FILE id="arLMzq" name="Interface.h" compile="0" resource="0" file="Source/Interface.h"/>
+      <FILE id="DJLzyj" name="OSCInterface.cpp" compile="1" resource="0"
+            file="Source/OSCInterface.cpp"/>
+      <FILE id="PowTUQ" name="OSCInterface.h" compile="0" resource="0" file="Source/OSCInterface.h"/>
       <FILE id="cC08GH" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="zBHHmU" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
@@ -37,6 +37,7 @@
         <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
         <MODULEPATH id="juce_audio_processors" path="../../JUCE/modules"/>
         <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_osc" path="../../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2017 targetFolder="Builds/VisualStudio2017">
@@ -64,6 +65,7 @@
         <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
         <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
         <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_osc" path="../../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </VS2017>
     <LINUX_MAKE targetFolder="Builds/Linux">
@@ -88,6 +90,7 @@
         <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
         <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
         <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_osc" path="../../../../../../Applications/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
   </EXPORTFORMATS>
@@ -105,9 +108,10 @@
     <MODULES id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULES id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULES id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_osc" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULES id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
-  <JUCEOPTIONS/>
+  <JUCEOPTIONS JUCE_JACK="1"/>
   <LIVE_SETTINGS>
     <OSX/>
   </LIVE_SETTINGS>
