@@ -475,3 +475,4 @@ MainContentComponent::~MainContentComponent()
     currentPosition.setEnabled(value);
   }
   //==========================================================================
+

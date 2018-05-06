@@ -10,6 +10,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./OSCInterface.h"
+#include "./MainContentComponent.h"
 
 Component* createMainContentComponent();
 
@@ -68,7 +69,7 @@ public:
 					       DocumentWindow::allButtons)
     {
       setUsingNativeTitleBar (true);
-      setContentOwned (createMainContentComponent(), true);
+      setContentOwned (new MainContentComponent(), true);
       setResizable (true, true);
 
       centreWithSize (getWidth(), getHeight());

@@ -15,8 +15,6 @@ public:
   MainContentComponent();
   ~MainContentComponent();
 
-  void labelTextChanged (Label* label) override;
-  
   void prepareToPlay (int samplesPerBlockExpected, double sR) override;
   
   void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override;
@@ -114,6 +112,6 @@ private:
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
 
-Component* createMainContentComponent()     { return new MainContentComponent(); }
+//Component* createMainContentComponent()     { return ; }
 
 #endif  // MAINCOMPONENT_H_INCLUDED
