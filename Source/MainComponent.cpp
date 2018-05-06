@@ -3,8 +3,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-
-
 class MainContentComponent : public AudioAppComponent,
 			     public ChangeListener,
 			     public Button::Listener,
@@ -81,8 +79,10 @@ public:
       transports[i]->addChangeListener(this);
       mapper.add(new ChannelRemappingAudioSource(transports[i], false));
       mapper[i]->setNumberOfChannelsToProduce(2);
-      mapper[i]->setOutputChannelMapping(0, 0);
-      mapper[i]->setOutputChannelMapping(1, 1);
+      ////////////////////////////////////////
+      // Default mapping should go here.
+      //      mapper[i]->setOutputChannelMapping(0, 0);
+      //      mapper[i]->setOutputChannelMapping(1, 1);
     }
 
     ////////////////////////////////////////
@@ -192,8 +192,8 @@ public:
   
   void resized() override
   {
-    auto left = 168;
-    auto vert = 300; 
+    auto left = xPosInterface;
+    auto vert = yPosInterface;; 
     positionSlider.setBounds (left+1, 268, getWidth() - left - 337, 20);
     
     titleLabel.setBounds(10, 0, 200, 100);
@@ -213,12 +213,16 @@ public:
     diagnosticsBox.setBounds (rect);
 
     ////////////////////////////////////////
-    // Place the soundfiles in the interface
+    // Place the soundfile names in the interface
+    int yPos = vert + 60; // Start position
     for(int i=0; i<fileNameLabels.size(); i++) {
       Label *l = fileNameLabels[i];
-      int vertSpace = 20*i;
+      int ySpace = 20; // Space between items
+      ySpace = ySpace * channelsPerFile[i]; // Adjusted to number of channels in current file
+      int ySpaceOffset = 10 * channelsPerFile[i]; //ySpace / 2;
+      logMessage(std::to_string(ySpace * channelsPerFile[i]));
       if(l != nullptr) {
-	l->setBounds(left-150, vert+80+vertSpace, 140, 50);
+	l->setBounds(left-150, (yPos+ySpaceOffset)+(ySpace*i), 140, 50);
 	l->setFont(Font ("Geneva", 12.0f, Font::plain));
 	l->setJustificationType(Justification::centredRight);
       }
@@ -247,21 +251,22 @@ public:
 
     ////////////////////////////////////////
     // Routing happens here
-    for(int i = 0; i<numOfSourceChannels; ++i) {
-      for(int j = 0;j<getNumberOfHardwareOutputs(); ++j) {
-	if(button == &routeChannel[i][j]) {
-	  if(button->getToggleState()) { // Switch on routing for node
-	    //	    mapper.setOutputChannelMapping(i, j);
-	    logMessage("--------------------------------------");
-	    logMessage("Audio channel "+std::to_string(i)+" mapped to output "+std::to_string(j));
+    for(int i = 0; i<files.size(); i++) { // Per sound file
+      for(int j = 0;j<channelsPerFile[i]; j++) { // Per channel of sound file
+	for(int k = 0; k<getNumberOfHardwareOutputs(); k++) { // Per physical audio output
+	  if(button == routeChannel[i][j][k]) {
+	    if(button->getToggleState()) { // Switch on routing for node
+	      logMessage("--------------------------------------");
+	      logMessage("Audio channel "+std::to_string(j)+
+			 " of file "+std::to_string(i)+
+			 " mapped to output "+std::to_string(k));
+	      mapper[i]->setOutputChannelMapping(j, k);
+	    }
+	    else {
+	      mapper[i]->setOutputChannelMapping(j, outOfBounds);
+	    }
 	  }
-	    //	    logMessage("Yes"+std::to_string(i)+std::to_string(j));
-	  else {
-	    //	    mapper.setOutputChannelMapping(i, outOfBounds);
-	  }
-	    //logMessage("No");
 	}
-    	//	routeChannel[i][j].setBounds(startXPos+(Xindent*i), startYPos+(Yindent*j), 80, 50);
       }
     }
   }
@@ -333,10 +338,11 @@ private:
     int f = std::rand()%numOfFiles;
     double length = 0;
     int numOfSourceChannels = 2;
-    int startYPos = 380;
-    int startXPos = 168;
+    int startYPos = yPosInterface+80;
+    int startXPos = xPosInterface;
     int columnWidth = 50;
     int rowHeight = 20;
+    int calcYPos = startYPos;
     String label = "Ch.";
     // Make headers for the output channel numbers
     for(int g = 0; g<getNumberOfHardwareOutputs(); g++) {
@@ -345,8 +351,8 @@ private:
       channelNames[g].setFont(Font ("Geneva", 12.0f, Font::plain));
       channelNames[g].setBounds(startXPos+(columnWidth*g)-3, startYPos-20, 40, 20);
     }
-
     // Print the filenames
+    //    int rows = files.size() * 
     for(int i = 0; i < files.size(); i++) {
       if(i < maxNumberOfFiles) {
     	createReader(files[i], i);
@@ -358,18 +364,19 @@ private:
 
 	////////////////////////////////////////
 	// Make channel mapping interface
-	//	for(int j = 0; j<channelsPerFile[i]; ++j) {
-	for(int j = 0; j<2; ++j) {
-	  //	  for(int k = 0;k<getNumberOfHardwareOutputs(); ++k) {
-	  for(int k = 0;k<4; ++k) {
-	    //	    std::cout << j << std::endl;
+	for(int j = 0; j<channelsPerFile[i]; j++) {
+	  calcYPos = calcYPos+(rowHeight*j);
+	  for(int k = 0;k<getNumberOfHardwareOutputs(); k++) {
+	    logMessage(std::to_string(j)+"-"+std::to_string(k)+"-"+std::to_string(calcYPos));
 	    ToggleButton *b = new ToggleButton();
 	    addAndMakeVisible(b);
-	    b->setBounds(startXPos+(columnWidth*k), startYPos+(rowHeight*j)+(rowHeight*i), 30, 30);
+	    b->setBounds(startXPos+(columnWidth*k), calcYPos, 30, 30);
 	    b->setTooltip("Route channel "+std::to_string(j)+" to output "+std::to_string(k));
 	    b->addListener(this);
+	    routeChannel[i][j][k] = b;
 	  }
 	}
+	calcYPos += rowHeight;
       }
     }
     resized();
@@ -388,9 +395,8 @@ private:
   {
     AudioFormatReader* reader;
     reader = formatManager.createReaderFor(file);
-    //    channelsPerFile[i] = reader->numChannels;
-    channelsPerFile[i] = 4;
-    //    logMessage(std::to_string(reader->numChannels));
+    channelsPerFile[i] = reader->numChannels;
+    logMessage("Channels for file: "+std::to_string(channelsPerFile[i]));
     if (reader != nullptr)
       {
 	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
@@ -445,7 +451,10 @@ private:
     auto* device = deviceManager.getCurrentAudioDevice();
     const BigInteger ch = device->getActiveOutputChannels();
     int activeChannels = ch.getHighestBit() + 1;
-    return activeChannels;
+    if(activeChannels > maxChannels)
+      return maxChannels;
+    else 
+      return activeChannels;
   }
   
   void logMessage (const String& m)
@@ -496,8 +505,9 @@ private:
   Array<File> files;
   int fileIndex = 0;
   int channelsInFile = 0;
-  const static int maxChannels = 64;
-  const static int sourceChannels = 4;
+  const static int maxChannels = 128;
+  const static int maxFiles = maxChannels;
+  const static int sourceChannels = 16;
   int channelsPerFile[maxChannels];
 
   // GUI
@@ -510,13 +520,15 @@ private:
   double sampleRate;
   Slider positionSlider;
   Label  currentPosition;
-
+  int xPosInterface = 168;
+  int yPosInterface = 300;
+  
   AudioDeviceSelectorComponent audioSetupComp;
   Label cpuUsageLabel;
   Label cpuUsageText;
   Label channelNames[sourceChannels];
   TextEditor diagnosticsBox;
-  ToggleButton routeChannel[sourceChannels][maxChannels];
+  ToggleButton *routeChannel[maxFiles][sourceChannels][maxChannels];
   
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 };
