@@ -6,9 +6,9 @@
               splashScreenColour="Dark" cppLanguageStandard="11" companyCopyright="">
   <MAINGROUP id="BNpHuD" name="Player">
     <GROUP id="{B1795414-5B06-F2B5-EC13-A53FD0B4EDE6}" name="Source">
-      <FILE id="uDtYqf" name="MainComponent.cpp" compile="1" resource="0"
-            file="MainComponent.cpp"/>
       <FILE id="zBHHmU" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="WGmDt1" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
