@@ -10,7 +10,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./OSCInterface.h"
-#include "./MainContentComponent.h"
 
 Component* createMainContentComponent();
 
@@ -60,16 +59,16 @@ public:
     This class implements the desktop window that contains an instance of
     our MainContentComponent class.
   */
-  class MainWindow    : public DocumentWindow
+  class MainWindow : public DocumentWindow
   {
   public:
-    MainWindow (String name) : DocumentWindow (name,
-					       Desktop::getInstance().getDefaultLookAndFeel()
-					       .findColour (ResizableWindow::backgroundColourId),
-					       DocumentWindow::allButtons)
+    MainWindow (String name)  : DocumentWindow (name,
+						Desktop::getInstance().getDefaultLookAndFeel()
+						.findColour (ResizableWindow::backgroundColourId),
+						DocumentWindow::allButtons)
     {
       setUsingNativeTitleBar (true);
-      setContentOwned (new MainContentComponent(), true);
+      setContentOwned (createMainContentComponent(), true);
       setResizable (true, true);
 
       centreWithSize (getWidth(), getHeight());
