@@ -113,6 +113,7 @@ public:
     //    localOsc->test();
     //    OSCInterface *t = static_cast<OSCInterface*>(localOsc);
     //    t->test();
+    loadSoundFile("Hej");
   }
     
   ~MainContentComponent()
@@ -420,6 +421,17 @@ private:
     files = dir.findChildFiles(2, false, "*.wav");   
     for(int i = 0; i < files.size(); i++)
       std::cout << files[i].getFileName() << std::endl;
+  }
+
+  void loadSoundFile(const String name)
+  {
+    File directory("~/rosenberg/audio");
+    const String *f = new String(directory.getFullPathName()+"/"+name);
+    std::cout << *f << std::endl;
+    File *audioFile = new File(*f);
+    if(audioFile->exists()) {
+      files.add(*audioFile);
+    }
   }
     
   void unloadAudioFiles()
