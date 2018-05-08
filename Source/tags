@@ -1,0 +1,78 @@
+
+MainComponent.cpp,4291
+#define MAINCOMPONENT_H_INCLUDEDMAINCOMPONENT_H_INCLUDED2,34
+class MainContentComponent : public AudioAppComponent,MainContentComponent7,145
+  MainContentComponent() : state (Stopped),MainContentComponent14,346
+  ~MainContentComponent()~MainContentComponent133,4960
+  enum TransportStateTransportState291,10240
+     Stopped,Stopped293,10270
+     Starting,Starting294,10285
+     Playing,Playing295,10301
+     StoppingStopping296,10316
+  void changeState (TransportState newState)changeState299,10341
+  void startSources()startSources333,11115
+  void setPosition(float pos)setPosition343,11331
+  void openButtonClicked()openButtonClicked351,11493
+  void playButtonClicked()playButtonClicked404,13443
+  void createReader(const File &file, int i)createReader409,13511
+  void stopButtonClicked()stopButtonClicked423,14028
+  void conButtonClicked()conButtonClicked428,14097
+  static String getListOfActiveBits (const BigInteger& b)getListOfActiveBits449,14695
+  void dumpDeviceInfo()dumpDeviceInfo460,14934
+  int getNumberOfHardwareOutputs()getNumberOfHardwareOutputs485,16157
+  void logMessage (const String& m)logMessage496,16484
+  void sliderSetRange(double min, double max)sliderSetRange519,16983
+  void sliderEnabled(bool value)sliderEnabled525,17137
+  AudioFormatManager formatManager;formatManager533,17354
+  OwnedArray<AudioTransportSource> transports;transports534,17391
+  OwnedArray<AudioFormatReaderSource> readerSources;readerSources535,17439
+  OwnedArray<ChannelRemappingAudioSource> mapper;mapper536,17493
+  MixerAudioSource mixer;mixer538,17548
+  TransportState state;state539,17575
+  Array<File> files;files540,17600
+  int fileIndex = 0;fileIndex541,17622
+  int channelsInFile = 0;channelsInFile542,17644
+  const static int maxChannels = 128;maxChannels543,17671
+  const static int maxNumberOfFiles = maxChannels;maxNumberOfFiles544,17710
+  const static int sourceChannels = 16;sourceChannels545,17762
+  int channelsPerFile[maxChannels];channelsPerFile546,17803
+  TextButton openButton;openButton549,17852
+  TextButton playButton;playButton550,17878
+  TextButton stopButton;stopButton551,17904
+  TextButton conButton;conButton552,17930
+  Label titleLabel;titleLabel553,17955
+  OwnedArray<Label> fileNameLabels;fileNameLabels554,17976
+  String dataDir;dataDir555,18013
+  double sampleRate;sampleRate556,18032
+  Slider positionSlider;positionSlider557,18054
+  Label  currentPosition;currentPosition558,18080
+  int xPosInterface = 168;xPosInterface559,18107
+  int yPosInterface = 300;yPosInterface560,18135
+  AudioDeviceSelectorComponent audioSetupComp;audioSetupComp562,18167
+  Label cpuUsageLabel;cpuUsageLabel563,18215
+  Label cpuUsageText;cpuUsageText564,18239
+  Label channelNames[sourceChannels];channelNames565,18262
+  TextEditor diagnosticsBox;diagnosticsBox566,18301
+  ToggleButton *routeChannel[maxNumberOfFiles][sourceChannels][maxChannels];routeChannel567,18331
+  void* localOsc;localOsc568,18409
+  class OSCInterface : private OSCReceiver,OSCInterface572,18503
+    OSCInterface(MainContentComponent *m) : receivePort(9005),OSCInterface578,18744
+    ~OSCInterface() {}~OSCInterface600,19410
+    void test()test604,19528
+    int connectButtonClicked()connectButtonClicked609,19605
+    void connectToServer()connectToServer630,20107
+    void handleConnectError (int failedPort)handleConnectError640,20388
+    void showConnectionErrorMessage (const String& messageText)showConnectionErrorMessage648,20625
+    void handleInvalidPortNumberEntered()handleInvalidPortNumberEntered656,20948
+    bool isValidOscPort (int port) constisValidOscPort664,21181
+    bool isConnected() constisConnected669,21279
+    int receivePort;receivePort695,22210
+    int sendPort;sendPort696,22232
+    int currentPortNumber = -1;currentPortNumber697,22251
+    const OSCAddress *rFileName;rFileName698,22284
+    OSCAddress *rPlay;rPlay699,22318
+    OSCAddressPattern *rStop;rStop700,22342
+    OSCSender oscSend;oscSend701,22373
+    MainContentComponent *main;main702,22397
+    String oscAddress = "127.0.0.1";oscAddress703,22430
+Component* createMainContentComponent()     { return new MainContentComponent(); }createMainContentComponent707,22480
