@@ -76,33 +76,20 @@ public:
     addAndMakeVisible (&cpuUsageText);
     
     setSize (800, 600);
-    
+
     ////////////////////////////////////////
     // Create TransportSources and Labels for all the files
-    for(int i = 0; i < maxNumberOfFiles; ++i) {
-      transports.add(new AudioTransportSource());
-      transports[i]->addChangeListener(this);
-      mapper.add(new ChannelRemappingAudioSource(transports[i], false));
-      mapper[i]->setNumberOfChannelsToProduce(2);
-      ////////////////////////////////////////
-      // Default mapping should go here.
-      //      mapper[i]->setOutputChannelMapping(0, 0);
-      //      mapper[i]->setOutputChannelMapping(1, 1);
-    }
+    createTransports();
+
+    ////////////////////////////////////////
+    // Set up audio and load files
+    loadSoundFiles();
+    setAudioChannels (2, 2);
 
     ////////////////////////////////////////
     // Register listeners
     deviceManager.addChangeListener (this);
     formatManager.registerBasicFormats();
-
-    ////////////////////////////////////////
-    // Set up audio and load files
-    setAudioChannels (2, 2);
-    File dir("~/rosenberg/audio");
-    files = dir.findChildFiles(2, false, "*.wav");
-    
-    for(int i = 0; i < files.size(); i++)
-      std::cout << files[i].getFileName() << std::endl;
 
     ////////////////////////////////////////
     // Set up the file position slider
@@ -239,6 +226,7 @@ public:
       if (source == transports[i]) {
 	for(int j = 0; j < files.size(); ++j) {
 	  if(transports[j]->isPlaying()) {
+	    changeState(Playing);
 	    sourcesPlaying += 1;
 	    break;
 	  }
@@ -302,11 +290,13 @@ private:
 	  case Stopped:                         
 	    stopButton.setEnabled (false);
 	    playButton.setEnabled (true);
+	    //	    sliderEnabled(false);
 	    setPosition(0.0);
 	    break;
                     
 	  case Starting:                        
 	    playButton.setEnabled (true);
+	    sliderEnabled(true);
 	    startSources();
 	    break;
                     
@@ -345,8 +335,13 @@ private:
 
   void openButtonClicked()
   {    
-    int numOfFiles = files.size();
-    if(numOfFiles > 0 && sema == 0) {
+    if(files.size() == 0) {
+      loadSoundFiles();
+      createTransports();
+      std::cout << "files: " << String(files.size()) << std::endl;
+      std::cout << "transports: " << String(transports.size()) << std::endl;
+    }
+    if(files.size() > 0 && sema == 0) {
       double length = 0;
       // Geometry
       int startYPos = yPosInterface+80;
@@ -406,6 +401,27 @@ private:
     }
   }
 
+  void createTransports()
+  {
+    for(int i = 0; i < files.size(); ++i) {
+      transports.add(new AudioTransportSource());
+      transports[i]->addChangeListener(this);
+      mapper.add(new ChannelRemappingAudioSource(transports[i], false));
+      mapper[i]->setNumberOfChannelsToProduce(2);
+      ////////////////////////////////////////
+      // Default mapping should go here.
+      //      mapper[i]->setOutputChannelMapping(1, 1);
+    }
+  }
+  
+  void loadSoundFiles()
+  {
+    File dir("~/rosenberg/audio");
+    files = dir.findChildFiles(2, false, "*.wav");   
+    for(int i = 0; i < files.size(); i++)
+      std::cout << files[i].getFileName() << std::endl;
+  }
+    
   void unloadAudioFiles()
   {
     for(int h = 0; h<transports.size();h++) {
@@ -432,17 +448,19 @@ private:
     readerSources.clear();
     //Empty the files Array
     files.clear();
-
-   
-    std::cout << "tranports size:" << std::endl;
+    // Clear mappers
+    mapper.clear();
+    // Clear the transports
+    //transports.clear();
+    
+    std::cout << "transports size:" << std::endl;
     std::cout << std::to_string(transports.size()) << std::endl;
     std::cout << "readerSources size:" << std::endl;
     std::cout << std::to_string(readerSources.size()) << std::endl;
     std::cout << "files size:" << std::endl;
     std::cout << std::to_string(files.size()) << std::endl;
-    // OwnedArray<AudioTransportSource> transports;
-    // OwnedArray<AudioFormatReaderSource> readerSources;
-    // OwnedArray<ChannelRemappingAudioSource> mapper;
+
+    sliderEnabled(false);
   }
   
   void playButtonClicked()
