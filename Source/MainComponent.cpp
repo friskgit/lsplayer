@@ -78,13 +78,13 @@ public:
     setSize (800, 600);
 
     ////////////////////////////////////////
-    // Create TransportSources and Labels for all the files
-    createTransports();
-
-    ////////////////////////////////////////
     // Set up audio and load files
     loadSoundFiles();
     setAudioChannels (2, 2);
+
+    ////////////////////////////////////////
+    // Create TransportSources and Labels for all the files
+    createTransports();
 
     ////////////////////////////////////////
     // Register listeners
@@ -136,7 +136,7 @@ public:
     // mixer.addInputSource(&transportSourcei, false);
 
     for(int i = 0; i < mapper.size(); i++) {
-      mixer.addInputSource(mapper[i], false);
+      mixer.addInputSource(mapper[i], true);
     }
     mixer.prepareToPlay(samplesPerBlockExpected, sR);
   }
@@ -444,14 +444,18 @@ private:
     }
     //Clear all the sources loaded in the mixer
     mixer.removeAllInputs();
+    std::cout << "transports first size:" << std::endl;
+    std::cout << std::to_string(transports.size()) << std::endl;
+    std::cout << "mapper first size:" << std::endl;
+    std::cout << std::to_string(mapper.size()) << std::endl;
     // Clear the reader sources
     readerSources.clear();
     //Empty the files Array
     files.clear();
     // Clear mappers
-    mapper.clear();
+    mapper.clear(true);
     // Clear the transports
-    //transports.clear();
+    transports.clear(false);
     
     std::cout << "transports size:" << std::endl;
     std::cout << std::to_string(transports.size()) << std::endl;
