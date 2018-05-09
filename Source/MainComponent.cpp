@@ -83,10 +83,6 @@ public:
     setAudioChannels (2, 2);
 
     ////////////////////////////////////////
-    // Create TransportSources and Labels for all the files
-    createTransports();
-
-    ////////////////////////////////////////
     // Register listeners
     deviceManager.addChangeListener (this);
     formatManager.registerBasicFormats();
@@ -334,7 +330,6 @@ private:
   {    
     if(files.size() == 0) {
       loadSoundFiles();
-      createTransports();
       std::cout << "files: " << String(files.size()) << std::endl;
       std::cout << "transports: " << String(transports.size()) << std::endl;
     }
@@ -415,17 +410,26 @@ private:
     //      mapper[i]->setOutputChannelMapping(1, 1);
   }
   
+  /**
+   * Load all soundfiles from the default directory.
+   */
   void loadSoundFiles()
   {
-    File dir("~/rosenberg/audio");
+    File dir(defaultDirectory);
     files = dir.findChildFiles(2, false, "*.wav");   
     for(int i = 0; i < files.size(); i++)
       std::cout << files[i].getFileName() << std::endl;
+    ////////////////////////////////////////
+    // Create TransportSources and Labels for all the files
+    createTransports();
   }
 
+  /**
+   * Load a single soundfile from the default directory.
+   */
   void loadSoundFile(const String name)
   {
-    File directory("~/rosenberg/audio");
+    File directory(defaultDirectory);
     const String *f = new String(directory.getFullPathName()+"/"+name);
     std::cout << *f << std::endl;
     File *audioFile = new File(*f);
@@ -654,6 +658,7 @@ private:
   ToggleButton *routeChannel[maxNumberOfFiles][sourceChannels][maxChannels];
   void* localOsc;
 
+  String defaultDirectory = "~/rosenberg/audio"
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 
   class OSCInterface : private OSCReceiver,
