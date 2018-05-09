@@ -113,7 +113,6 @@ public:
     //    localOsc->test();
     //    OSCInterface *t = static_cast<OSCInterface*>(localOsc);
     //    t->test();
-    loadSoundFile("Hej");
   }
     
   ~MainContentComponent()
@@ -135,10 +134,6 @@ public:
     // Mixer
     // mixer.addInputSource(&transportSource, false);
     // mixer.addInputSource(&transportSourcei, false);
-
-    for(int i = 0; i < mapper.size(); i++) {
-      mixer.addInputSource(mapper[i], true);
-    }
     mixer.prepareToPlay(samplesPerBlockExpected, sR);
   }
 
@@ -170,7 +165,7 @@ public:
   void releaseResources() override
   {
     //    mapper.releaseResources();
-    //    transports[0]->releaseResources();
+    transports[0]->releaseResources();
     mixer.releaseResources();
   }
 
@@ -321,6 +316,7 @@ private:
     ScopedLock lock(deviceManager.getAudioCallbackLock());
     for(int i = 0; i < files.size(); ++i) {
       if(i < transports.size()) {
+	std::cout << "Starting source: " << String() << std::endl;
 	transports[i]->start();
       }
     }
@@ -343,6 +339,7 @@ private:
       std::cout << "transports: " << String(transports.size()) << std::endl;
     }
     if(files.size() > 0 && sema == 0) {
+      std::cout << "are we here: " << std::endl;
       double length = 0;
       // Geometry
       int startYPos = yPosInterface+80;
@@ -407,12 +404,15 @@ private:
     for(int i = 0; i < files.size(); ++i) {
       transports.add(new AudioTransportSource());
       transports[i]->addChangeListener(this);
-      mapper.add(new ChannelRemappingAudioSource(transports[i], false));
+      //      mapper.add(new ChannelRemappingAudioSource(transports[i], false));
+      mapper.set(i, new ChannelRemappingAudioSource(transports[i], true));
       mapper[i]->setNumberOfChannelsToProduce(2);
-      ////////////////////////////////////////
-      // Default mapping should go here.
-      //      mapper[i]->setOutputChannelMapping(1, 1);
+      //      std::cout << "prepare mapper size: " << String(mapper.size()) << std::endl;
+      mixer.addInputSource(mapper[i], true);
     }
+    ////////////////////////////////////////
+    // Default mapping should go here.
+    //      mapper[i]->setOutputChannelMapping(1, 1);
   }
   
   void loadSoundFiles()
@@ -430,7 +430,14 @@ private:
     std::cout << *f << std::endl;
     File *audioFile = new File(*f);
     if(audioFile->exists()) {
+      std::cout << " size before: " << String(files.size()) << std::endl;
       files.add(*audioFile);
+      std::cout << " size after: " << String(files.size()) << std::endl;
+      for(int i = 0; i < files.size(); i++)
+	std::cout << files[i].getFileName() << std::endl;
+      // Create transports for the file loaded
+      createTransports();
+      openButtonClicked();
     }
   }
     
@@ -465,7 +472,7 @@ private:
     //Empty the files Array
     files.clear();
     // Clear mappers
-    mapper.clear(true);
+    mapper.clear(false);
     // Clear the transports
     transports.clear(false);
     
@@ -475,6 +482,8 @@ private:
     std::cout << std::to_string(readerSources.size()) << std::endl;
     std::cout << "files size:" << std::endl;
     std::cout << std::to_string(files.size()) << std::endl;
+    std::cout << "mapper size:" << std::endl;
+    std::cout << std::to_string(mapper.size()) << std::endl;
 
     sliderEnabled(false);
   }
@@ -753,22 +762,29 @@ private:
     {
       // Get file name.
       // Responds to /player/file s "MySoundfile.waw"
-      if (message.size() == 1 && message[0].isString()) {
+      if (message.size() > 0 && message[0].isString()) {
 	if(rFileName->toString().compare(message.getAddressPattern().toString()) == 0)
 	  for(int i = 0; i < message.size(); i++) {
-	    std::cout << message[i].getString() << std::endl;
+	    main->loadSoundFile(message[i].getString());
+	    //	    std::cout << message[i].getString() << std::endl;
 	  }
       }
       // Start or stop olayback.
-      // REsponds to /player/play i 1|0
+      // Responds to /player/play i 1|0
       if (message.size() == 1 && message[0].isInt32()) {
-	if(rPlay->toString().compare(message.getAddressPattern().toString()) == 0)
-	  for(int i = 0; i < message.size(); i++) {
-	    std::cout << message[i].getInt32() << std::endl;
+	if(rPlay->toString().compare(message.getAddressPattern().toString()) == 0) {
+	  if(message[0].getInt32() == 1) {
+	    main->playButtonClicked();
+	    std::cout << "play" << std::endl;
 	  }
+	  else {
+	    main->stopButtonClicked();
+	    std::cout << "stop" << std::endl;
+	  }
+	}
       }
     }
-         
+
     //==============================================================================
     int receivePort;
     int sendPort;
