@@ -682,6 +682,8 @@ private:
        }
       addListener(this, *rPlay);
       addListener(this, *rFileName);
+
+            
     }
     
     ~OSCInterface() {}
@@ -693,6 +695,16 @@ private:
       std::cout << "Funktar" << std::endl;
     }
 
+    void *sendMessage(String address, String message)
+    {
+      if (! oscSend.send ("/player/message", (String)"Sent!")) {
+	  showConnectionErrorMessage ("Error: could not send OSC message.");
+	  //	  return -1;
+      }
+      //      else
+	//	return 0;  
+    }
+    
     int connectButtonClicked()
     {
       if(!isConnected()) {
@@ -766,7 +778,9 @@ private:
 	if(rFileName->toString().compare(message.getAddressPattern().toString()) == 0)
 	  for(int i = 0; i < message.size(); i++) {
 	    main->loadSoundFile(message[i].getString());
-	    //	    std::cout << message[i].getString() << std::endl;
+	    // Using a function pointer:
+	    //	    (this->*sosc)("/player/test", "Hej");//message[i].getString());
+	    std::cout << message[i].getString() << std::endl;
 	  }
       }
       // Start or stop olayback.
@@ -795,6 +809,11 @@ private:
     OSCSender oscSend;
     MainContentComponent *main;
     String oscAddress = "127.0.0.1";
+
+    // Pointer to the sendOSC callback
+    typedef void *(MainContentComponent::OSCInterface::*sendOSCCallback)(String, String);
+    sendOSCCallback sosc = &MainContentComponent::OSCInterface::sendMessage;
+
   };
 };
 
