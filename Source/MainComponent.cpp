@@ -79,8 +79,8 @@ public:
 
     ////////////////////////////////////////
     // Set up audio and load files
+    setAudioChannels (2, maxChannels);
     loadSoundFiles();
-    setAudioChannels (2, 2);
 
     ////////////////////////////////////////
     // Register listeners
@@ -213,6 +213,7 @@ public:
     
   void changeListenerCallback (ChangeBroadcaster* source) override
   {
+    
     int sourcesPlaying = 0;
     for(int i = 0; i < files.size(); ++i) {
       if (source == transports[i]) {
@@ -282,7 +283,6 @@ private:
 	  case Stopped:                         
 	    stopButton.setEnabled (false);
 	    playButton.setEnabled (true);
-	    //	    sliderEnabled(false);
 	    setPosition(0.0);
 	    break;
                     
@@ -345,12 +345,10 @@ private:
       String label = "Ch.";
       // Make headers for the output channel numbers
       for(int g = 0; g<getNumberOfHardwareOutputs(); g++) {
-	if(channelNames[g].isVisible()) {
-	  addAndMakeVisible(channelNames[g]);
-	  channelNames[g].setText(label+std::to_string(g+1), dontSendNotification);
-	  channelNames[g].setFont(Font ("Geneva", 12.0f, Font::plain));
-	  channelNames[g].setBounds(startXPos+(columnWidth*g)-3, startYPos-20, 40, 20);
-	}
+	addAndMakeVisible(channelNames[g]);
+	channelNames[g].setText(label+std::to_string(g+1), dontSendNotification);
+	channelNames[g].setFont(Font ("Geneva", 12.0f, Font::plain));
+	channelNames[g].setBounds(startXPos+(columnWidth*g)-3, startYPos-20, 40, 20);
       }
       // Print the filenames
       //    int rows = files.size() * 
@@ -380,6 +378,7 @@ private:
 	  calcYPos += rowHeight;
 	}
       }
+      //      createDefaultMapping();
       resized();
       sliderSetRange(0, length);
       sliderEnabled(true);
@@ -394,24 +393,44 @@ private:
     }
   }
 
+  void createDefaultMapping() {
+    ////////////////////////////////////////
+    // Default routing should go here.
+    if(files.size() > 0) {
+      int audioSourceChannels = 0;
+      // Get the number audio source channels
+      for(int f = 0; f < files.size(); f++) {
+      // 	audioSourceChannels += channelsPerFile[f];
+      // 	std::cout << String(audioSourceChannels) << std::endl;
+      // }
+	for(int s = 0; s < audioSourceChannels; s++) {
+	  for(int ch = 0; ch < getNumberOfHardwareOutputs(); ch++) {
+	  
+	  }
+	}
+      }
+    }
+    //      mapper[i]->setOutputChannelMapping(1, 1);
+  }
+  
+  /**
+   * Create the transport and mapper objects that hold the file reader object
+   * and eventually gets added to the corresponding mapper object. 
+   */
   void createTransports()
   {
     for(int i = 0; i < files.size(); ++i) {
       transports.add(new AudioTransportSource());
       transports[i]->addChangeListener(this);
-      //      mapper.add(new ChannelRemappingAudioSource(transports[i], false));
       mapper.set(i, new ChannelRemappingAudioSource(transports[i], true));
       mapper[i]->setNumberOfChannelsToProduce(2);
       //      std::cout << "prepare mapper size: " << String(mapper.size()) << std::endl;
       mixer.addInputSource(mapper[i], true);
     }
-    ////////////////////////////////////////
-    // Default mapping should go here.
-    //      mapper[i]->setOutputChannelMapping(1, 1);
   }
   
   /**
-   * Load all soundfiles from the default directory.
+   * Load all soundfiles from the default directory. Only has support for WAV.
    */
   void loadSoundFiles()
   {
@@ -578,10 +597,14 @@ private:
     auto* device = deviceManager.getCurrentAudioDevice();
     const BigInteger ch = device->getActiveOutputChannels();
     int activeChannels = ch.getHighestBit() + 1;
-    if(activeChannels > maxChannels)
+    if(activeChannels > maxChannels) {
+      //      setAudioChannels (2, maxChannels);
       return maxChannels;
-    else 
+    }
+    else {
+      //      setAudioChannels(2, activeChannels);
       return activeChannels;
+    }
   }
   
   void logMessage (const String& m)
@@ -631,7 +654,7 @@ private:
   Array<File> files;
   int fileIndex = 0;
   int channelsInFile = 0;
-  const static int maxChannels = 128;
+  const static int maxChannels = 64;
   const static int maxNumberOfFiles = maxChannels;
   const static int sourceChannels = 16;
   int channelsPerFile[maxChannels];
@@ -658,7 +681,7 @@ private:
   ToggleButton *routeChannel[maxNumberOfFiles][sourceChannels][maxChannels];
   void* localOsc;
 
-  String defaultDirectory = "~/rosenberg/audio"
+  String defaultDirectory = "~/rosenberg/audio";
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 
   class OSCInterface : private OSCReceiver,

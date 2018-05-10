@@ -1,85 +1,76 @@
 
-MainComponent.cpp,4774
-#define MAINCOMPONENT_H_INCLUDEDMAINCOMPONENT_H_INCLUDED2,34
-class MainContentComponent : public AudioAppComponent,MainContentComponent6,116
-  MainContentComponent() : state (Stopped),MainContentComponent13,317
-  ~MainContentComponent()~MainContentComponent118,4271
-  enum TransportStateTransportState270,9197
-     Stopped,Stopped272,9227
-     Starting,Starting273,9242
-     Playing,Playing274,9258
-     StoppingStopping275,9273
-  void changeState (TransportState newState)changeState278,9298
-  void startSources()startSources314,10134
-  void setPosition(float pos)setPosition325,10412
-  void openButtonClicked()openButtonClicked333,10575
-  void createTransports()createTransports402,13029
-  void loadSoundFiles()loadSoundFiles418,13707
-  void loadSoundFile(const String name)loadSoundFile426,13935
-  void unloadAudioFiles()unloadAudioFiles444,14596
-  void playButtonClicked()playButtonClicked491,16267
-  void createReader(const File &file, int i)createReader496,16335
-  void stopButtonClicked()stopButtonClicked510,16852
-  void conButtonClicked()conButtonClicked515,16921
-  static String getListOfActiveBits (const BigInteger& b)getListOfActiveBits536,17519
-  void dumpDeviceInfo()dumpDeviceInfo547,17758
-  int getNumberOfHardwareOutputs()getNumberOfHardwareOutputs572,18981
-  void logMessage (const String& m)logMessage583,19308
-  void sliderSetRange(double min, double max)sliderSetRange606,19807
-  void sliderEnabled(bool value)sliderEnabled612,19961
-  AudioFormatManager formatManager;formatManager620,20178
-  OwnedArray<AudioTransportSource> transports;transports621,20215
-  OwnedArray<AudioFormatReaderSource> readerSources;readerSources622,20263
-  OwnedArray<ChannelRemappingAudioSource> mapper;mapper623,20317
-  MixerAudioSource mixer;mixer625,20372
-  TransportState state;state626,20399
-  Array<File> files;files627,20424
-  int fileIndex = 0;fileIndex628,20446
-  int channelsInFile = 0;channelsInFile629,20468
-  const static int maxChannels = 128;maxChannels630,20495
-  const static int maxNumberOfFiles = maxChannels;maxNumberOfFiles631,20534
-  const static int sourceChannels = 16;sourceChannels632,20586
-  int channelsPerFile[maxChannels];channelsPerFile633,20627
-  TextButton openButton;openButton636,20676
-  TextButton playButton;playButton637,20702
-  TextButton stopButton;stopButton638,20728
-  TextButton conButton;conButton639,20754
-  Label titleLabel;titleLabel640,20779
-  OwnedArray<Label> fileNameLabels;fileNameLabels641,20800
-  String dataDir;dataDir642,20837
-  Slider positionSlider;positionSlider643,20856
-  Label  currentPosition;currentPosition644,20882
-  int xPosInterface = 168;xPosInterface645,20909
-  int yPosInterface = 300;yPosInterface646,20937
-  int sema = 0;sema647,20965
-  AudioDeviceSelectorComponent audioSetupComp;audioSetupComp649,20986
-  Label cpuUsageLabel;cpuUsageLabel650,21034
-  Label cpuUsageText;cpuUsageText651,21058
-  Label channelNames[maxChannels];channelNames652,21081
-  TextEditor diagnosticsBox;diagnosticsBox653,21117
-  ToggleButton *routeChannel[maxNumberOfFiles][sourceChannels][maxChannels];routeChannel654,21147
-  void* localOsc;localOsc655,21225
-  class OSCInterface : private OSCReceiver,OSCInterface659,21319
-    OSCInterface(MainContentComponent *m) : receivePort(9005),OSCInterface665,21560
-    ~OSCInterface() {}~OSCInterface689,22242
-    void test()test693,22360
-    void *sendMessage(String address, String message)sendMessage698,22437
-    int connectButtonClicked()connectButtonClicked708,22715
-    void connectToServer()connectToServer729,23217
-    void handleConnectError (int failedPort)handleConnectError739,23498
-    void showConnectionErrorMessage (const String& messageText)showConnectionErrorMessage747,23735
-    void handleInvalidPortNumberEntered()handleInvalidPortNumberEntered755,24058
-    bool isValidOscPort (int port) constisValidOscPort763,24291
-    bool isConnected() constisConnected768,24389
-    int receivePort;receivePort802,25543
-    int sendPort;sendPort803,25565
-    int currentPortNumber = -1;currentPortNumber804,25584
-    const OSCAddress *rFileName;rFileName805,25617
-    OSCAddress *rPlay;rPlay806,25651
-    OSCAddressPattern *rStop;rStop807,25675
-    OSCSender oscSend;oscSend808,25706
-    MainContentComponent *main;main809,25730
-    String oscAddress = "127.0.0.1";oscAddress810,25763
-    typedef void *(MainContentComponent::OSCInterface::*sendOSCCallback)(String, String);sendOSCCallback813,25843
-    sendOSCCallback sosc = &MainContentComponent::OSCInterface::sendMessage;sosc814,25934
-Component* createMainContentComponent()     { return new MainContentComponent(); }createMainContentComponent819,26026
+MainComponent.cpp,2706
+#define MAINCOMPONENT_H_INCLUDED2,34
+class MainContentComponent 6,116
+  MainContentComponent(13,317
+  ~MainContentComponent(114,4137
+  void labelTextChanged 122,4323
+  void prepareToPlay 127,4392
+  void getNextAudioBlock 136,4702
+  void releaseResources(161,5672
+  void paint 168,5829
+  void resized(174,5993
+  void changeListenerCallback 214,7523
+  void buttonClicked 235,7977
+  enum TransportState266,9063
+     Stopped,268,9093
+     Starting,269,9108
+     Playing,270,9124
+     Stopping271,9139
+  void changeState 274,9164
+  void startSources(310,10000
+  void setPosition(321,10278
+  void openButtonClicked(329,10441
+  void createTransports(397,12868
+  void loadSoundFiles(416,13614
+  void loadSoundFile(430,14043
+  void unloadAudioFiles(448,14701
+  void playButtonClicked(495,16372
+  void createReader(500,16440
+  void stopButtonClicked(514,16957
+  void conButtonClicked(519,17026
+  static String getListOfActiveBits 540,17624
+  void dumpDeviceInfo(551,17863
+  int getNumberOfHardwareOutputs(576,19086
+  void logMessage 587,19413
+  void sliderValueChanged(594,19633
+  void 	sliderDragStarted 598,19699
+  void sliderDragEnded 603,19766
+  void sliderSetRange(610,19912
+  void sliderEnabled(616,20066
+  AudioFormatManager formatManager;624,20283
+  OwnedArray<AudioTransportSource> transports;625,20320
+  OwnedArray<AudioFormatReaderSource> readerSources;626,20368
+  OwnedArray<ChannelRemappingAudioSource> mapper;627,20422
+  MixerAudioSource mixer;629,20477
+  TransportState state;630,20504
+  Array<File> files;631,20529
+  int fileIndex 632,20551
+  int channelsInFile 633,20573
+  const static int maxChannels 634,20600
+  const static int maxNumberOfFiles 635,20639
+  const static int sourceChannels 636,20691
+  int channelsPerFile[channelsPerFile637,20732
+  TextButton openButton;640,20781
+  TextButton playButton;641,20807
+  TextButton stopButton;642,20833
+  TextButton conButton;643,20859
+  Label titleLabel;644,20884
+  OwnedArray<Label> fileNameLabels;645,20905
+  String dataDir;646,20942
+  Slider positionSlider;647,20961
+  Label  currentPosition;648,20987
+  int xPosInterface 649,21014
+  int yPosInterface 650,21042
+  int sema 651,21070
+  AudioDeviceSelectorComponent audioSetupComp;653,21091
+  Label cpuUsageLabel;654,21139
+  Label cpuUsageText;655,21163
+  Label channelNames[channelNames656,21186
+  TextEditor diagnosticsBox;657,21222
+  ToggleButton *routeChannel[routeChannel658,21252
+  void* localOsc;659,21330
+  String defaultDirectory 661,21351
+    OSCInterface(670,21714
+    typedef void *(MainContentComponent::OSCInterface::*sendOSCCallback)sendOSCCallback819,26032
+Component* createMainContentComponent(825,26215
