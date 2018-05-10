@@ -423,8 +423,7 @@ private:
       transports.add(new AudioTransportSource());
       transports[i]->addChangeListener(this);
       mapper.set(i, new ChannelRemappingAudioSource(transports[i], true));
-      mapper[i]->setNumberOfChannelsToProduce(2);
-      //      std::cout << "prepare mapper size: " << String(mapper.size()) << std::endl;
+      mapper[i]->setNumberOfChannelsToProduce(2); // Fix this
       mixer.addInputSource(mapper[i], true);
     }
   }
@@ -448,6 +447,8 @@ private:
    */
   void loadSoundFile(const String name)
   {
+    if(files.size() > 0)
+      unloadAudioFiles();
     File directory(defaultDirectory);
     const String *f = new String(directory.getFullPathName()+"/"+name);
     std::cout << *f << std::endl;
@@ -462,6 +463,8 @@ private:
       createTransports();
       openButtonClicked();
     }
+    OSCInterface *osc = static_cast<OSCInterface*>(localOsc);
+    osc->sendMessage("/player/stdout", String("The file ")+name+String(" has been loaded"));
   }
     
   void unloadAudioFiles()
@@ -471,6 +474,7 @@ private:
     }
     // Clear the file names off the GUI
     fileNameLabels.clear();
+    
     // Clear the ceckboxes in the GUI
     for(int i = 0; i < files.size(); i++) {
       for(int j = 0; j<channelsPerFile[i]; j++) {
@@ -508,6 +512,8 @@ private:
     std::cout << "mapper size:" << std::endl;
     std::cout << std::to_string(mapper.size()) << std::endl;
 
+    openButton.setButtonText ("Load");
+    sema = 0;
     sliderEnabled(false);
   }
   
@@ -592,11 +598,15 @@ private:
     logMessage((String)getNumberOfHardwareOutputs());
   }
 
+  /**
+   * Get the number of hardware channels currently active.
+   */
   int getNumberOfHardwareOutputs()
   {
     auto* device = deviceManager.getCurrentAudioDevice();
     const BigInteger ch = device->getActiveOutputChannels();
     int activeChannels = ch.getHighestBit() + 1;
+    // Fix this.
     if(activeChannels > maxChannels) {
       //      setAudioChannels (2, maxChannels);
       return maxChannels;
@@ -697,7 +707,7 @@ private:
 
       rFileName = new OSCAddress("/player/file");
       rPlay = new OSCAddress("/player/play");
-      rStop = new OSCAddressPattern("/player/stop");
+      rClear = new OSCAddress("/player/clear");
       if (! isValidOscPort(receivePort)) {
 	handleInvalidPortNumberEntered();
 	return;
@@ -710,8 +720,7 @@ private:
        }
       addListener(this, *rPlay);
       addListener(this, *rFileName);
-
-            
+      addListener(this, *rClear);
     }
     
     ~OSCInterface() {}
@@ -723,14 +732,13 @@ private:
       std::cout << "Funktar" << std::endl;
     }
 
-    void *sendMessage(String address, String message)
+    void sendMessage(const String address, const String message)
     {
-      if (! oscSend.send ("/player/message", (String)"Sent!")) {
+      if(isConnected()) {
+	if (! oscSend.send (address, (String)message)) {
 	  showConnectionErrorMessage ("Error: could not send OSC message.");
-	  //	  return -1;
+	}
       }
-      //      else
-	//	return 0;  
     }
     
     int connectButtonClicked()
@@ -750,7 +758,6 @@ private:
 	else return -1;
       }
     }
-
     // create and send an OSC message with an address and a float value:
 
   private:
@@ -800,6 +807,7 @@ private:
     
     void oscMessageReceived (const OSCMessage& message) override
     {
+      std::cout << message.getAddressPattern().toString() << std::endl;
       // Get file name.
       // Responds to /player/file s "MySoundfile.waw"
       if (message.size() > 0 && message[0].isString()) {
@@ -807,11 +815,10 @@ private:
 	  for(int i = 0; i < message.size(); i++) {
 	    main->loadSoundFile(message[i].getString());
 	    // Using a function pointer:
-	    //	    (this->*sosc)("/player/test", "Hej");//message[i].getString());
 	    std::cout << message[i].getString() << std::endl;
 	  }
       }
-      // Start or stop olayback.
+      // Start or stop playback.
       // Responds to /player/play i 1|0
       if (message.size() == 1 && message[0].isInt32()) {
 	if(rPlay->toString().compare(message.getAddressPattern().toString()) == 0) {
@@ -824,6 +831,12 @@ private:
 	    std::cout << "stop" << std::endl;
 	  }
 	}
+	if(rClear->toString().compare(message.getAddressPattern().toString()) == 0) {
+	  std::cout << message.getAddressPattern().toString() << std::endl;
+	  if(message[0].getInt32() == 1) {
+	    main->unloadAudioFiles();
+	  }
+	}
       }
     }
 
@@ -833,14 +846,14 @@ private:
     int currentPortNumber = -1;
     const OSCAddress *rFileName;
     OSCAddress *rPlay;
-    OSCAddressPattern *rStop;
+    const OSCAddress *rClear;
     OSCSender oscSend;
     MainContentComponent *main;
     String oscAddress = "127.0.0.1";
 
     // Pointer to the sendOSC callback
-    typedef void *(MainContentComponent::OSCInterface::*sendOSCCallback)(String, String);
-    sendOSCCallback sosc = &MainContentComponent::OSCInterface::sendMessage;
+    //    typedef void *(MainContentComponent::OSCInterface::*sendOSCCallback)(String, String);
+    //    sendOSCCallback sosc = &MainContentComponent::OSCInterface::sendMessage;
 
   };
 };
