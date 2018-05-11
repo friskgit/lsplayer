@@ -174,8 +174,8 @@ public:
   void resized() override
   {
     auto left = xPosInterface;
-    auto vert = yPosInterface;; 
-    positionSlider.setBounds (left+1, 268, getWidth() - left - 337, 20);
+    auto vert = yPosInterface; 
+    positionSlider.setBounds (left+1, yPosInterface-40, 287, 20);
     
     titleLabel.setBounds(10, 0, 200, 100);
     conButton.setBounds(left-104, vert, 80, 50);
@@ -196,19 +196,19 @@ public:
 
     ////////////////////////////////////////
     // Place the soundfile names in the interface
-    int yPos = vert + 60; // Start position
+    int yPos = vert + 65; // Start position
     for(int i=0; i<fileNameLabels.size(); i++) {
       Label *l = fileNameLabels[i];
-      int ySpace = 20; // Space between items
-      ySpace = ySpace * channelsPerFile[i]; // Adjusted to number of channels in current file
-      int ySpaceOffset = 10 * channelsPerFile[i]; //ySpace / 2;
-      logMessage(std::to_string(ySpace * channelsPerFile[i]));
+      int ySpace = 20*channelsPerFile[i]+5; // Space between items
+      //      logMessage("Ch.names:"+std::to_string(ySpace * channelsPerFile[i]+5));
       if(l != nullptr) {
-	l->setBounds(left-150, (yPos+ySpaceOffset)+(ySpace*i), 140, 50);
-	l->setFont(Font ("Geneva", 12.0f, Font::plain));
-	l->setJustificationType(Justification::centredRight);
+    	l->setBounds(left-150, yPos, 140, 50);
+    	l->setFont(Font ("Geneva", 12.0f, Font::plain));
+    	l->setJustificationType(Justification::centredRight);
+	yPos += ySpace;
       }
     }
+
   }
     
   void changeListenerCallback (ChangeBroadcaster* source) override
@@ -341,6 +341,7 @@ private:
       int startXPos = xPosInterface;
       int columnWidth = 50;
       int rowHeight = 20;
+      int spaceBetwFiles = 5;
       int calcYPos = startYPos;
       String label = "Ch.";
       // Make headers for the output channel numbers
@@ -350,23 +351,22 @@ private:
 	channelNames[g].setFont(Font ("Geneva", 12.0f, Font::plain));
 	channelNames[g].setBounds(startXPos+(columnWidth*g)-3, startYPos-20, 40, 20);
       }
-      // Print the filenames
-      //    int rows = files.size() * 
+      // Prepare the file names for the interface
+      // These are place in the function resized() above.
       for(int i = 0; i < files.size(); i++) {
 	if(i < maxNumberOfFiles) {
 	  createReader(files[i], i);
 	  if(length < transports[i]->getLengthInSeconds())
 	    length = transports[i]->getLengthInSeconds();
-	  logMessage(files[i].getFileName());
+	  //	  logMessage(files[i].getFileName());
 	  fileNameLabels.add(new Label(files[i].getFileName(), files[i].getFileName()));
 	  addAndMakeVisible(fileNameLabels[i]);
 
 	  ////////////////////////////////////////
 	  // Make channel mapping interface
 	  for(int j = 0; j<channelsPerFile[i]; j++) {
-	    calcYPos = calcYPos+(rowHeight*j);
 	    for(int k = 0;k<getNumberOfHardwareOutputs(); k++) {
-	      logMessage(std::to_string(j)+"-"+std::to_string(k)+"-"+std::to_string(calcYPos));
+	      //	      logMessage(std::to_string(j)+"-"+std::to_string(k)+"-"+std::to_string(calcYPos));
 	      ToggleButton *b = new ToggleButton();
 	      addAndMakeVisible(b);
 	      b->setBounds(startXPos+(columnWidth*k), calcYPos, 30, 30);
@@ -374,11 +374,12 @@ private:
 	      b->addListener(this);
 	      routeChannel[i][j][k] = b;
 	    }
+	    calcYPos = calcYPos+(rowHeight);
 	  }
-	  calcYPos += rowHeight;
+	  calcYPos += spaceBetwFiles;
 	}
       }
-      //      createDefaultMapping();
+      createDefaultMapping();
       resized();
       sliderSetRange(0, length);
       sliderEnabled(true);
@@ -393,20 +394,22 @@ private:
     }
   }
 
+  /**
+   *  Create a default linear routing for loaded soundfiles.
+   */
   void createDefaultMapping() {
-    ////////////////////////////////////////
-    // Default routing should go here.
+    int runningOutputCount = 0;
+    int numberOfOutputs = getNumberOfHardwareOutputs();
+    int localOutput = 0;
     if(files.size() > 0) {
-      int audioSourceChannels = 0;
-      // Get the number audio source channels
       for(int f = 0; f < files.size(); f++) {
-      // 	audioSourceChannels += channelsPerFile[f];
-      // 	std::cout << String(audioSourceChannels) << std::endl;
-      // }
-	for(int s = 0; s < audioSourceChannels; s++) {
-	  for(int ch = 0; ch < getNumberOfHardwareOutputs(); ch++) {
-	  
-	  }
+	for(int s = 0; s < channelsPerFile[f]; s++) {
+	    std::cout << "Output count: " << String(runningOutputCount%numberOfOutputs) << std::endl;
+	    std::cout << "Mapper: " << String(f)+"-" << String(s)+"-" << String(runningOutputCount%numberOfOutputs) << std::endl;
+	    //	    mapper[f]->setOutputChannelMapping(s, runningOutputCount%numberOfOutputs);
+	    localOutput = runningOutputCount%numberOfOutputs;
+	    routeChannel[f][s][localOutput]->setToggleState(true, sendNotification);
+	    runningOutputCount++;
 	}
       }
     }
@@ -680,7 +683,7 @@ private:
   Slider positionSlider;
   Label  currentPosition;
   int xPosInterface = 168;
-  int yPosInterface = 300;
+  int yPosInterface = 360;
   int sema = 0;
   
   AudioDeviceSelectorComponent audioSetupComp;
