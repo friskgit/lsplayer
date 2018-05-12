@@ -1,76 +1,96 @@
-
-MainComponent.cpp,2706
-#define MAINCOMPONENT_H_INCLUDED2,34
-class MainContentComponent 6,116
-  MainContentComponent(13,317
-  ~MainContentComponent(114,4137
-  void labelTextChanged 122,4323
-  void prepareToPlay 127,4392
-  void getNextAudioBlock 136,4702
-  void releaseResources(161,5672
-  void paint 168,5829
-  void resized(174,5993
-  void changeListenerCallback 214,7523
-  void buttonClicked 235,7977
-  enum TransportState266,9063
-     Stopped,268,9093
-     Starting,269,9108
-     Playing,270,9124
-     Stopping271,9139
-  void changeState 274,9164
-  void startSources(310,10000
-  void setPosition(321,10278
-  void openButtonClicked(329,10441
-  void createTransports(397,12868
-  void loadSoundFiles(416,13614
-  void loadSoundFile(430,14043
-  void unloadAudioFiles(448,14701
-  void playButtonClicked(495,16372
-  void createReader(500,16440
-  void stopButtonClicked(514,16957
-  void conButtonClicked(519,17026
-  static String getListOfActiveBits 540,17624
-  void dumpDeviceInfo(551,17863
-  int getNumberOfHardwareOutputs(576,19086
-  void logMessage 587,19413
-  void sliderValueChanged(594,19633
-  void 	sliderDragStarted 598,19699
-  void sliderDragEnded 603,19766
-  void sliderSetRange(610,19912
-  void sliderEnabled(616,20066
-  AudioFormatManager formatManager;624,20283
-  OwnedArray<AudioTransportSource> transports;625,20320
-  OwnedArray<AudioFormatReaderSource> readerSources;626,20368
-  OwnedArray<ChannelRemappingAudioSource> mapper;627,20422
-  MixerAudioSource mixer;629,20477
-  TransportState state;630,20504
-  Array<File> files;631,20529
-  int fileIndex 632,20551
-  int channelsInFile 633,20573
-  const static int maxChannels 634,20600
-  const static int maxNumberOfFiles 635,20639
-  const static int sourceChannels 636,20691
-  int channelsPerFile[channelsPerFile637,20732
-  TextButton openButton;640,20781
-  TextButton playButton;641,20807
-  TextButton stopButton;642,20833
-  TextButton conButton;643,20859
-  Label titleLabel;644,20884
-  OwnedArray<Label> fileNameLabels;645,20905
-  String dataDir;646,20942
-  Slider positionSlider;647,20961
-  Label  currentPosition;648,20987
-  int xPosInterface 649,21014
-  int yPosInterface 650,21042
-  int sema 651,21070
-  AudioDeviceSelectorComponent audioSetupComp;653,21091
-  Label cpuUsageLabel;654,21139
-  Label cpuUsageText;655,21163
-  Label channelNames[channelNames656,21186
-  TextEditor diagnosticsBox;657,21222
-  ToggleButton *routeChannel[routeChannel658,21252
-  void* localOsc;659,21330
-  String defaultDirectory 661,21351
-    OSCInterface(670,21714
-    typedef void *(MainContentComponent::OSCInterface::*sendOSCCallback)sendOSCCallback819,26032
-Component* createMainContentComponent(825,26215
+MAINCOMPONENT_H_INCLUDED	MainComponent.cpp	2
+MMainComponent.cpp	MainComponent.cpp	927
+MainContentComponent	MainComponent.cpp	6
+MainContentComponent	MainComponent.cpp	/^  MainContentComponent() : state (Stopped),$/
+OSCInterface	MainComponent.cpp	/^    OSCInterface(MainContentComponent *m) : receiv/
+Playing	MainComponent.cpp	272
+Starting	MainComponent.cpp	271
+Stopped	MainComponent.cpp	270
+Stopping	MainComponent.cpp	273
+TransportState	MainComponent.cpp	268
+aFile	MainComponent.cpp	923
+appendSoundFile	MainComponent.cpp	/^  void appendSoundFile(const String name)$/
+appendSoundFileSwap	MainComponent.cpp	/^  void appendSoundFileSwap(const String name)$/
+audioSetupComp	MainComponent.cpp	750
+buttonClicked	MainComponent.cpp	/^  void buttonClicked (Button* button) override$/
+changeListenerCallback	MainComponent.cpp	/^  void changeListenerCallback (ChangeBroadcaster* /
+changeState	MainComponent.cpp	/^  void changeState (TransportState newState)$/
+channelNames	MainComponent.cpp	753
+channelsInFile	MainComponent.cpp	730
+channelsPerFile	MainComponent.cpp	734
+conButton	MainComponent.cpp	740
+conButtonClicked	MainComponent.cpp	/^  void conButtonClicked()$/
+connectButtonClicked	MainComponent.cpp	/^    int connectButtonClicked()$/
+connectToServer	MainComponent.cpp	/^    void connectToServer()$/
+cpuUsageLabel	MainComponent.cpp	751
+cpuUsageText	MainComponent.cpp	752
+createDefaultMapping	MainComponent.cpp	/^  void createDefaultMapping() {$/
+createMainContentComponent	MainComponent.cpp	/^Component* createMainContentComponent()     { retu/
+createReader	MainComponent.cpp	/^  void createReader(const File &file, int i)$/
+createTransportFor	MainComponent.cpp	/^  void createTransportFor()$/
+createTransports	MainComponent.cpp	/^  void createTransports()$/
+currentPosition	MainComponent.cpp	745
+dataDir	MainComponent.cpp	743
+defaultDirectory	MainComponent.cpp	758
+diagnosticsBox	MainComponent.cpp	754
+dumpDeviceInfo	MainComponent.cpp	/^  void dumpDeviceInfo()$/
+fileIndex	MainComponent.cpp	729
+fileNameLabels	MainComponent.cpp	742
+files	MainComponent.cpp	728
+formatManager	MainComponent.cpp	721
+getListOfActiveBits	MainComponent.cpp	/^  static String getListOfActiveBits (const BigInte/
+getNextAudioBlock	MainComponent.cpp	/^  void getNextAudioBlock (const AudioSourceChannel/
+getNumberOfHardwareOutputs	MainComponent.cpp	/^  int getNumberOfHardwareOutputs()$/
+handleConnectError	MainComponent.cpp	/^    void handleConnectError (int failedPort)$/
+handleInvalidPortNumberEntered	MainComponent.cpp	/^    void handleInvalidPortNumberEntered()$/
+isConnected	MainComponent.cpp	/^    bool isConnected() const$/
+isValidOscPort	MainComponent.cpp	/^    bool isValidOscPort (int port) const$/
+labelTextChanged	MainComponent.cpp	/^  void labelTextChanged (Label* label) override$/
+loadSoundFile	MainComponent.cpp	/^  void loadSoundFile(const String name)$/
+loadSoundFiles	MainComponent.cpp	/^  void loadSoundFiles()$/
+localOsc	MainComponent.cpp	756
+logMessage	MainComponent.cpp	/^  void logMessage (const String& m)$/
+mapper	MainComponent.cpp	724
+maxChannels	MainComponent.cpp	731
+maxNumberOfFiles	MainComponent.cpp	732
+mixer	MainComponent.cpp	726
+openButton	MainComponent.cpp	737
+openButtonClicked	MainComponent.cpp	/^  void openButtonClicked()$/
+oscMessageReceived	MainComponent.cpp	/^    void oscMessageReceived (const OSCMessage& mes/
+oscSend	MainComponent.cpp	926
+paint	MainComponent.cpp	/^  void paint (Graphics& g) override$/
+playButton	MainComponent.cpp	738
+playButtonClicked	MainComponent.cpp	/^  void playButtonClicked()$/
+positionSlider	MainComponent.cpp	744
+prepareToPlay	MainComponent.cpp	/^  void prepareToPlay (int samplesPerBlockExpected,/
+rClear	MainComponent.cpp	925
+rFileName	MainComponent.cpp	922
+rPlay	MainComponent.cpp	924
+readerSources	MainComponent.cpp	723
+receivePort	MainComponent.cpp	918
+releaseResources	MainComponent.cpp	/^  void releaseResources() override$/
+resized	MainComponent.cpp	/^  void resized() override$/
+routeChannel	MainComponent.cpp	755
+sema	MainComponent.cpp	748
+sendMessage	MainComponent.cpp	/^    void sendMessage(const String address, const S/
+sendPort	MainComponent.cpp	919
+setPosition	MainComponent.cpp	/^  void setPosition(float pos)$/
+showConnectionErrorMessage	MainComponent.cpp	/^    void showConnectionErrorMessage (const String&/
+sliderDragEnded	MainComponent.cpp	/^  void sliderDragEnded (Slider *slider) override$/
+sliderDragStarted	MainComponent.cpp	/^  void 	sliderDragStarted (Slider *slider) overrid/
+sliderEnabled	MainComponent.cpp	/^  void sliderEnabled(bool value)$/
+sliderSetRange	MainComponent.cpp	/^  void sliderSetRange(double min, double max)$/
+sliderValueChanged	MainComponent.cpp	/^  void sliderValueChanged(Slider *slider) override/
+sourceChannels	MainComponent.cpp	733
+startSources	MainComponent.cpp	/^  void startSources()$/
+state	MainComponent.cpp	727
+stopButton	MainComponent.cpp	739
+stopButtonClicked	MainComponent.cpp	/^  void stopButtonClicked()$/
+test	MainComponent.cpp	/^    void test()$/
+titleLabel	MainComponent.cpp	741
+transports	MainComponent.cpp	722
+unloadAudioFiles	MainComponent.cpp	/^  void unloadAudioFiles()$/
+xPosInterface	MainComponent.cpp	746
+yPosInterface	MainComponent.cpp	747
+~MainContentComponent	MainComponent.cpp	/^  ~MainContentComponent()$/
+~OSCInterface	MainComponent.cpp	/^    ~OSCInterface() {}$/

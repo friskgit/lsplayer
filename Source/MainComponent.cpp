@@ -406,8 +406,8 @@ private:
     if(files.size() > 0) {
       for(int f = 0; f < files.size(); f++) {
 	for(int s = 0; s < channelsPerFile[f]; s++) {
-	    std::cout << "Output count: " << String(runningOutputCount%numberOfOutputs) << std::endl;
-	    std::cout << "Mapper: " << String(f)+"-" << String(s)+"-" << String(runningOutputCount%numberOfOutputs) << std::endl;
+	  //	    std::cout << "Output count: " << String(runningOutputCount%numberOfOutputs) << std::endl;
+	  //	    std::cout << "Mapper: " << String(f)+"-" << String(s)+"-" << String(runningOutputCount%numberOfOutputs) << std::endl;
 	    localOutput = runningOutputCount%numberOfOutputs;
 	    routeChannel[f][s][localOutput]->setToggleState(true, sendNotification);
 	    runningOutputCount++;
@@ -491,7 +491,7 @@ private:
 
   /** 
    * Append a file at the end of existing files by deleting all items
-   * and writing them backj in again.
+   * and writing them back in again.
    */
   void appendSoundFileSwap(const String name)
   {
@@ -769,10 +769,10 @@ private:
     {
       main = m;
 
-      rFileName = new OSCAddress("/player/file");
-      aFile = new OSCAddress("/player/append");
-      rPlay = new OSCAddress("/player/play");
-      rClear = new OSCAddress("/player/clear");
+      rFileName = new OSCAddress(oscRoot+"/file");
+      aFile = new OSCAddress(oscRoot+"/append");
+      rPlay = new OSCAddress(oscRoot+"/play");
+      rClear = new OSCAddress(oscRoot+"/clear");
       if (! isValidOscPort(receivePort)) {
 	handleInvalidPortNumberEntered();
 	return;
@@ -811,7 +811,7 @@ private:
     {
       if(!isConnected()) {
 	connectToServer();
-	if (! oscSend.send ("/player/message", (String)"Yep, I'm connected now."))
+	if (! oscSend.send (oscRoot+"/message", (String)"Yep, I'm connected now."))
 	  showConnectionErrorMessage ("Error: could not send OSC message.");
 	currentPortNumber = sendPort;
 	return 1;
@@ -876,14 +876,14 @@ private:
       std::cout << message.getAddressPattern().toString() << std::endl;
       // Get file name.
       if (message.size() > 0 && message[0].isString()) {
-	// Responds to /player/file s "MySoundfile.waw"
+	// Responds to /lsplayer/file s "MySoundfile.waw"
 	if(rFileName->toString().compare(message.getAddressPattern().toString()) == 0) {
 	  for(int i = 0; i < message.size(); i++) {
 	    main->loadSoundFile(message[i].getString());
 	    std::cout << message[i].getString() << std::endl;
 	  }
 	}
-	// Responds to /player/append s "MySoundfile.waw"
+	// Responds to /lsplayer/append s "MySoundfile.waw"
 	if(aFile->toString().compare(message.getAddressPattern().toString()) == 0) {
 	  for(int i = 0; i < message.size(); i++) {
 	    main->appendSoundFileSwap(message[i].getString());
@@ -892,7 +892,7 @@ private:
 	}
       }
       // Start or stop playback.
-      // Responds to /player/play i 1|0
+      // Responds to /lsplayer/play i 1|0
       if (message.size() == 1 && message[0].isInt32()) {
 	if(rPlay->toString().compare(message.getAddressPattern().toString()) == 0) {
 	  if(message[0].getInt32() == 1) {
@@ -904,6 +904,7 @@ private:
 	    std::cout << "stop" << std::endl;
 	  }
 	}
+	// Responds to /lsplayer/clear i 1
 	if(rClear->toString().compare(message.getAddressPattern().toString()) == 0) {
 	  std::cout << message.getAddressPattern().toString() << std::endl;
 	  if(message[0].getInt32() == 1) {
@@ -917,6 +918,7 @@ private:
     int receivePort;
     int sendPort;
     int currentPortNumber = -1;
+    const String oscRoot = "/lsplayer";
     const OSCAddress *rFileName; // Add a file
     const OSCAddress *aFile; //Append a file
     OSCAddress *rPlay; //Play

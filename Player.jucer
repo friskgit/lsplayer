@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="XeHRn4" name="Player" projectType="guiapp" version="1.0.0"
+<JUCERPROJECT id="XeHRn4" name="LSPlayer" projectType="guiapp" version="0.1.0"
               bundleIdentifier="com.juce.Player" includeBinaryInAppConfig="1"
               jucerVersion="5.3.1" displaySplashScreen="1" reportAppUsage="1"
-              splashScreenColour="Dark" cppLanguageStandard="11" companyCopyright="">
-  <MAINGROUP id="BNpHuD" name="Player">
+              splashScreenColour="Dark" cppLanguageStandard="11" companyCopyright="&#169; Henrik Frisk"
+              companyName="dinergy music" companyWebsite="http://www.henrikfrisk.com"
+              companyEmail="mail@henrikfrisk.com">
+  <MAINGROUP id="BNpHuD" name="LSPlayer">
     <GROUP id="{B1795414-5B06-F2B5-EC13-A53FD0B4EDE6}" name="Source">
       <FILE id="zBHHmU" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="WGmDt1" name="MainComponent.cpp" compile="1" resource="0"
@@ -15,9 +17,9 @@
     <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" osxCompatibility="10.9 SDK" isDebug="1" optimisation="1"
-                       targetName="PlayingSoundFilesTutorial" enablePluginBinaryCopyStep="1"/>
+                       targetName="LSPlayer" enablePluginBinaryCopyStep="1"/>
         <CONFIGURATION name="Release" osxCompatibility="10.9 SDK" isDebug="0" optimisation="2"
-                       targetName="PlayingSoundFilesTutorial" enablePluginBinaryCopyStep="1"/>
+                       targetName="LSPlayer" enablePluginBinaryCopyStep="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
@@ -40,12 +42,11 @@
     <VS2017 targetFolder="Builds/VisualStudio2017">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="PlayingSoundFilesTutorial"
-                       debugInformationFormat="ProgramDatabase" enablePluginBinaryCopyStep="0"/>
+                       isDebug="1" optimisation="1" targetName="LSPlayer" debugInformationFormat="ProgramDatabase"
+                       enablePluginBinaryCopyStep="0"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="PlayingSoundFilesTutorial"
-                       debugInformationFormat="ProgramDatabase" enablePluginBinaryCopyStep="0"
-                       linkTimeOptimisation="1"/>
+                       isDebug="0" optimisation="3" targetName="LSPlayer" debugInformationFormat="ProgramDatabase"
+                       enablePluginBinaryCopyStep="0" linkTimeOptimisation="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_video" path="../../JUCE/modules"/>
@@ -68,9 +69,9 @@
     <LINUX_MAKE targetFolder="Builds/Linux">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" libraryPath="/usr/X11R6/lib/" isDebug="1" optimisation="1"
-                       targetName="PlayingSoundFilesTutorial"/>
+                       targetName="LSPlayer"/>
         <CONFIGURATION name="Release" libraryPath="/usr/X11R6/lib/" isDebug="0" optimisation="2"
-                       targetName="PlayingSoundFilesTutorial"/>
+                       targetName="LSPlayer"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_video" path="../../JUCE/modules"/>
