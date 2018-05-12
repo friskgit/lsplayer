@@ -80,7 +80,7 @@ public:
     ////////////////////////////////////////
     // Set up audio and load files
     setAudioChannels (2, maxChannels);
-    loadSoundFiles();
+    //    loadSoundFiles();
 
     ////////////////////////////////////////
     // Register listeners
@@ -115,8 +115,8 @@ public:
   {
     //    readerSources.clear();
     //    transports.clear();
-    //    deviceManager.removeChangeListener (this);
-    //    shutdownAudio();
+    deviceManager.removeChangeListener (this);
+    shutdownAudio();
   }
 
   void labelTextChanged (Label* label) override
@@ -161,7 +161,7 @@ public:
   void releaseResources() override
   {
     //    mapper.releaseResources();
-    transports[0]->releaseResources();
+    //    transports[0]->releaseResources();
     mixer.releaseResources();
   }
 
@@ -213,7 +213,8 @@ public:
     
   void changeListenerCallback (ChangeBroadcaster* source) override
   {
-    
+    if(source == &deviceManager)
+      logMessage("Yes");
     int sourcesPlaying = 0;
     for(int i = 0; i < files.size(); ++i) {
       if (source == transports[i]) {
@@ -388,6 +389,7 @@ private:
       sema = 1;
     }
     else {
+      std::cout << "calling unload" << std::endl;
       unloadAudioFiles();
       openButton.setButtonText ("Load");
       sema = 0;
@@ -406,14 +408,12 @@ private:
 	for(int s = 0; s < channelsPerFile[f]; s++) {
 	    std::cout << "Output count: " << String(runningOutputCount%numberOfOutputs) << std::endl;
 	    std::cout << "Mapper: " << String(f)+"-" << String(s)+"-" << String(runningOutputCount%numberOfOutputs) << std::endl;
-	    //	    mapper[f]->setOutputChannelMapping(s, runningOutputCount%numberOfOutputs);
 	    localOutput = runningOutputCount%numberOfOutputs;
 	    routeChannel[f][s][localOutput]->setToggleState(true, sendNotification);
 	    runningOutputCount++;
 	}
       }
     }
-    //      mapper[i]->setOutputChannelMapping(1, 1);
   }
   
   /**
@@ -430,7 +430,25 @@ private:
       mixer.addInputSource(mapper[i], true);
     }
   }
-  
+
+  /**
+   * Create the transport and mapper object for this particular
+   * index.
+   */
+  void createTransportFor()
+  {
+    if(transports.size() < maxChannels) {
+      transports.add(new AudioTransportSource());
+      int i = transports.indexOf(transports.getLast());
+      transports[i]->addChangeListener(this);
+      mapper.set(i, new ChannelRemappingAudioSource(transports[i], true));
+      mapper[i]->setNumberOfChannelsToProduce(2); // Fix this
+      mixer.addInputSource(mapper[i], true);
+    }
+    else
+      std::cout << "Too many tranports loaded" << std::endl;
+  }
+
   /**
    * Load all soundfiles from the default directory. Only has support for WAV.
    */
@@ -447,6 +465,7 @@ private:
 
   /**
    * Load a single soundfile from the default directory.
+   * Each newly loaded file will replace all current files.
    */
   void loadSoundFile(const String name)
   {
@@ -469,7 +488,49 @@ private:
     OSCInterface *osc = static_cast<OSCInterface*>(localOsc);
     osc->sendMessage("/player/stdout", String("The file ")+name+String(" has been loaded"));
   }
-    
+
+  /** 
+   * Append a file at the end of existing files by deleting all items
+   * and writing them backj in again.
+   */
+  void appendSoundFileSwap(const String name)
+  {
+    File directory(defaultDirectory);
+    const String *f = new String(directory.getFullPathName()+"/"+name);
+    File *audioFile = new File(*f);
+    Array<File> n;
+    if(audioFile->exists()) {
+      if(files.size() > 0) {
+	n.addArray(files);
+	std::cout << " size files: " << String(files.size()) << std::endl;
+	std::cout << " size n: " << String(n.size()) << std::endl;
+	unloadAudioFiles();
+	files.swapWith(n);
+	}
+      files.add(*audioFile);
+      createTransports();
+      openButtonClicked();
+    }
+  }
+
+  /** 
+   * Append a file at the end of existing files.
+   */
+  void appendSoundFile(const String name)
+  {
+    File directory(defaultDirectory);
+    const String *f = new String(directory.getFullPathName()+"/"+name);
+    File *audioFile = new File(*f);
+    Array<File> n;
+    if(audioFile->exists()) {
+      std::cout << "File exists" << std::endl;
+      files.add(*audioFile);
+      createTransportFor();
+      openButtonClicked();
+      sema = 0;
+    }    
+  }
+  
   void unloadAudioFiles()
   {
     for(int h = 0; h<transports.size();h++) {
@@ -709,6 +770,7 @@ private:
       main = m;
 
       rFileName = new OSCAddress("/player/file");
+      aFile = new OSCAddress("/player/append");
       rPlay = new OSCAddress("/player/play");
       rClear = new OSCAddress("/player/clear");
       if (! isValidOscPort(receivePort)) {
@@ -723,6 +785,7 @@ private:
        }
       addListener(this, *rPlay);
       addListener(this, *rFileName);
+      addListener(this, *aFile);
       addListener(this, *rClear);
     }
     
@@ -812,14 +875,21 @@ private:
     {
       std::cout << message.getAddressPattern().toString() << std::endl;
       // Get file name.
-      // Responds to /player/file s "MySoundfile.waw"
       if (message.size() > 0 && message[0].isString()) {
-	if(rFileName->toString().compare(message.getAddressPattern().toString()) == 0)
+	// Responds to /player/file s "MySoundfile.waw"
+	if(rFileName->toString().compare(message.getAddressPattern().toString()) == 0) {
 	  for(int i = 0; i < message.size(); i++) {
 	    main->loadSoundFile(message[i].getString());
-	    // Using a function pointer:
 	    std::cout << message[i].getString() << std::endl;
 	  }
+	}
+	// Responds to /player/append s "MySoundfile.waw"
+	if(aFile->toString().compare(message.getAddressPattern().toString()) == 0) {
+	  for(int i = 0; i < message.size(); i++) {
+	    main->appendSoundFileSwap(message[i].getString());
+	    std::cout << message[i].getString() << std::endl;
+	  }
+	}
       }
       // Start or stop playback.
       // Responds to /player/play i 1|0
@@ -847,8 +917,9 @@ private:
     int receivePort;
     int sendPort;
     int currentPortNumber = -1;
-    const OSCAddress *rFileName;
-    OSCAddress *rPlay;
+    const OSCAddress *rFileName; // Add a file
+    const OSCAddress *aFile; //Append a file
+    OSCAddress *rPlay; //Play
     const OSCAddress *rClear;
     OSCSender oscSend;
     MainContentComponent *main;
