@@ -104,8 +104,9 @@ public:
 
     ////////////////////////////////////////
     // Set up OSC
-    //    OSCInterface *osc = new OSCInterface(this);
     localOsc = new OSCInterface(this);
+    
+    //    OSCInterface *osc = new OSCInterface(this);
     //    localOsc->test();
     //    OSCInterface *t = static_cast<OSCInterface*>(localOsc);
     //    t->test();
@@ -114,8 +115,11 @@ public:
     
   ~MainContentComponent()
   {
+    formatManager.clearFormats();
+    localOsc = nullptr;
     readerSources.clear();
     transports.clear();
+    files.clear();
     deviceManager.removeChangeListener (this);
     shutdownAudio();
   }
@@ -161,8 +165,6 @@ public:
 
   void releaseResources() override
   {
-    //    mapper.releaseResources();
-    //    transports[0]->releaseResources();
     mixer.releaseResources();
   }
 
@@ -633,8 +635,8 @@ private:
     logMessage("Channels for file: "+std::to_string(channelsPerFile[i]));
     if (reader != nullptr)
       {
-	ScopedPointer<AudioFormatReaderSource> source = new AudioFormatReaderSource(reader, true);
-	transports[i]->setSource(source, 0, nullptr, reader->sampleRate);
+	std::unique_ptr<AudioFormatReaderSource> source (new AudioFormatReaderSource(reader, true));
+	transports[i]->setSource(source.get(), 0, nullptr, reader->sampleRate);
 	readerSources.insert(i, source.release());
       }
   }
@@ -820,7 +822,7 @@ private:
 	std::cout << "Ready to receive osc" << std::endl;
       }
        else {
-	 showConnectionErrorMessage("Error: could not connect to UDP porttt "+String(receivePort));
+	 showConnectionErrorMessage("Error: could not connect to UDP port "+String(receivePort));
        }
       addListener(this, *rPlay);
       addListener(this, *rFileName);
@@ -828,7 +830,12 @@ private:
       addListener(this, *rClear);
     }
     
-    ~OSCInterface() {}
+    ~OSCInterface()
+    {
+      std::cout << "Here" << std::endl;
+      oscSend.disconnect();
+      disconnect();
+    }
     
     //==============================================================================
 
