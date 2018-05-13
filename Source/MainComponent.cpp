@@ -836,7 +836,7 @@ private:
       addListener(this, *aFile);
       addListener(this, *rClear);
 
-      //      oscSend = std::make_unique<OSCSender>(new OSCSender());
+      oscSend.reset(new OSCSender());
     }
     
     ~OSCInterface()
@@ -846,8 +846,9 @@ private:
       delete aFile;
       delete rPlay;
       delete rClear;
-      oscSend.disconnect();
+      oscSend->disconnect();
       disconnect();
+      oscSend = nullptr;
       main = nullptr;
     }
     
@@ -861,7 +862,7 @@ private:
     void sendMessage(const String address, const String message)
     {
       if(isConnected()) {
-	if (! oscSend.send (address, (String)message)) {
+	if (! oscSend->send (address, (String)message)) {
 	  showConnectionErrorMessage ("Error: could not send OSC message.");
 	}
       }
@@ -871,13 +872,13 @@ private:
     {
       if(!isConnected()) {
 	connectToServer();
-	if (! oscSend.send (oscRoot+"/message", (String)"Yep, I'm connected now."))
+	if (! oscSend->send (oscRoot+"/message", (String)"Yep, I'm connected now."))
 	  showConnectionErrorMessage ("Error: could not send OSC message.");
 	currentPortNumber = sendPort;
 	return 1;
       }
       else {
-	if(oscSend.disconnect()) {
+	if(oscSend->disconnect()) {
 	  currentPortNumber = -1;
 	  return 0;
 	}
@@ -893,7 +894,7 @@ private:
 	handleInvalidPortNumberEntered();
 	return;
       }
-      if (! oscSend.connect (oscAddress, sendPort))
+      if (! oscSend->connect (oscAddress, sendPort))
 	showConnectionErrorMessage ("Error: could not connect to UDP port"+String(sendPort));
     }
 
@@ -983,7 +984,7 @@ private:
     const OSCAddress *aFile; //Append a file
     const OSCAddress *rPlay; //Play
     const OSCAddress *rClear;
-    OSCSender oscSend;
+    std::unique_ptr<OSCSender> oscSend;
     MainContentComponent *main;
     String oscAddress = "127.0.0.1";
 
