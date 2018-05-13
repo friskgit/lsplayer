@@ -109,12 +109,13 @@ public:
     //    localOsc->test();
     //    OSCInterface *t = static_cast<OSCInterface*>(localOsc);
     //    t->test();
+
   }
     
   ~MainContentComponent()
   {
-    //    readerSources.clear();
-    //    transports.clear();
+    readerSources.clear();
+    transports.clear();
     deviceManager.removeChangeListener (this);
     shutdownAudio();
   }
@@ -273,6 +274,13 @@ private:
      Stopping
     };
 
+  enum SpeakerSetup
+    {
+     Dome,
+     Studio114,
+     Studio118
+    };
+
   void changeState (TransportState newState)
   {
     if (state != newState)
@@ -380,7 +388,8 @@ private:
 	  calcYPos += spaceBetwFiles;
 	}
       }
-      createDefaultMapping();
+      //      createDefaultMapping();
+      createStereoMapping(1, 90);
       resized();
       sliderSetRange(0, length);
       sliderEnabled(true);
@@ -413,6 +422,36 @@ private:
 	    runningOutputCount++;
 	}
       }
+    }
+  }
+
+  /**
+   *  Put the sound of the file in fileIndex at position 
+   *  centerPosition.
+   */
+  void createStereoMapping(int fileIndex, int centerPosition) {
+    std::pair<int, int> stereoPair;
+    calculatePosition(centerPosition, 1, &stereoPair, Dome);
+    if(fileIndex < files.size()) {
+      // Wrap position around the actual number of speakers.
+      int spkrL = stereoPair.first%getNumberOfHardwareOutputs();
+      int spkrR = stereoPair.second%getNumberOfHardwareOutputs();
+      routeChannel[fileIndex][0][spkrL]->setToggleState(true, sendNotification);
+      routeChannel[fileIndex][1][spkrR]->setToggleState(true, sendNotification);
+      std::cout << "First: " << String(stereoPair.first) << std::endl;
+      std::cout << "Second: " << String(stereoPair.second) << std::endl;
+    }
+  }
+
+  void calculatePosition(int angle, int radius, std::pair<int, int> *spkr, SpeakerSetup s) {
+    int lowerRing = 16;
+    int middleRing = 8;
+    int topRing = 4;
+    float degreesPerSpeaker = 360/lowerRing;
+    switch(s) {
+    case Dome:
+      spkr->first = (int)(angle/degreesPerSpeaker)-0.5;
+      spkr->second = (int)(angle/degreesPerSpeaker)+0.5;
     }
   }
   
