@@ -1,98 +1,104 @@
 
-MainComponent.cpp,3482
+MainComponent.cpp,3690
 #define MAINCOMPONENT_H_INCLUDED2,34
 class MainContentComponent 6,116
   MainContentComponent(13,317
-  ~MainContentComponent(114,4153
-  void labelTextChanged 122,4327
-  void prepareToPlay 127,4396
-  void getNextAudioBlock 136,4706
-  void releaseResources(161,5676
-  void paint 168,5839
-  void resized(174,6003
-  void changeListenerCallback 214,7414
-  void buttonClicked 237,7928
-  enum TransportState268,9014
-     Stopped,270,9044
-     Starting,271,9059
-     Playing,272,9075
-     Stopping273,9090
-  void changeState 276,9115
-  void startSources(311,9916
-  void setPosition(322,10194
-  void openButtonClicked(330,10357
-  void createDefaultMapping(402,12982
-  void createTransports(423,13838
-  void createTransportFor(438,14304
-  void loadSoundFiles(455,14901
-  void loadSoundFile(470,15391
-  void appendSoundFileSwap(496,16379
-  void appendSoundFile(519,17023
-  void unloadAudioFiles(534,17443
-  void playButtonClicked(584,19175
-  void createReader(589,19243
-  void stopButtonClicked(603,19760
-  void conButtonClicked(608,19829
-  static String getListOfActiveBits 629,20427
-  void dumpDeviceInfo(640,20666
-  int getNumberOfHardwareOutputs(668,21963
-  void logMessage 684,22427
-  void sliderValueChanged(691,22647
-  void 	sliderDragStarted 695,22713
-  void sliderDragEnded 700,22780
-  void sliderSetRange(707,22926
-  void sliderEnabled(713,23080
-  AudioFormatManager formatManager;721,23297
-  OwnedArray<AudioTransportSource> transports;722,23334
-  OwnedArray<AudioFormatReaderSource> readerSources;723,23382
-  OwnedArray<ChannelRemappingAudioSource> mapper;724,23436
-  MixerAudioSource mixer;726,23491
-  TransportState state;727,23518
-  Array<File> files;728,23543
-  int fileIndex 729,23565
-  int channelsInFile 730,23587
-  const static int maxChannels 731,23614
-  const static int maxNumberOfFiles 732,23652
-  const static int sourceChannels 733,23704
-  int channelsPerFile[channelsPerFile734,23745
-  TextButton openButton;737,23794
-  TextButton playButton;738,23820
-  TextButton stopButton;739,23846
-  TextButton conButton;740,23872
-  Label titleLabel;741,23897
-  OwnedArray<Label> fileNameLabels;742,23918
-  String dataDir;743,23955
-  Slider positionSlider;744,23974
-  Label  currentPosition;745,24000
-  int xPosInterface 746,24027
-  int yPosInterface 747,24055
-  int sema 748,24083
-  AudioDeviceSelectorComponent audioSetupComp;750,24104
-  Label cpuUsageLabel;751,24152
-  Label cpuUsageText;752,24176
-  Label channelNames[channelNames753,24199
-  TextEditor diagnosticsBox;754,24235
-  ToggleButton *routeChannel[routeChannel755,24265
-  void* localOsc;756,24343
-  String defaultDirectory 758,24364
-    OSCInterface(767,24728
-    ~OSCInterface(792,25511
-    void test(796,25629
-    void sendMessage(801,25706
-    int connectButtonClicked(810,25954
-    void connectToServer(830,26455
-    void handleConnectError 840,26736
-    void showConnectionErrorMessage 848,26973
-    void handleInvalidPortNumberEntered(856,27296
-    bool isValidOscPort 864,27529
-    bool isConnected(869,27627
-    void oscMessageReceived 874,27718
-    int receivePort;918,29350
-    int sendPort;919,29372
-    const OSCAddress *rFileName;rFileName922,29465
-    const OSCAddress *aFile;aFile923,29513
-    OSCAddress *rPlay;rPlay924,29559
-    const OSCAddress *rClear;rClear925,29590
-    OSCSender oscSend;926,29621
-    MainContentComponent *main;main927,29645
-Component* createMainContentComponent(937,29953
+  ~MainContentComponent(117,4226
+  void labelTextChanged 131,4579
+  void prepareToPlay 136,4648
+  void getNextAudioBlock 145,4958
+  void releaseResources(170,5928
+  void paint 175,6007
+  void resized(181,6171
+  void changeListenerCallback 221,7582
+  void buttonClicked 244,8096
+  enum TransportState275,9182
+     Stopped,277,9212
+     Starting,278,9227
+     Playing,279,9243
+     Stopping280,9258
+  enum SpeakerSetup283,9283
+     Dome,285,9311
+     Studio114,286,9323
+     Studio118287,9340
+  void changeState 290,9366
+  void startSources(325,10167
+  void setPosition(336,10445
+  void openButtonClicked(344,10608
+  void createDefaultMapping(417,13276
+  void createStereoMapping(438,14064
+  void calculatePosition(452,14783
+  void createTransports(468,15321
+  void createTransportFor(483,15787
+  void loadSoundFiles(500,16384
+  void loadSoundFile(515,16874
+  void appendSoundFileSwap(542,17882
+  void appendSoundFile(565,18526
+  void unloadAudioFiles(580,18946
+  void playButtonClicked(630,20678
+  void createReader(635,20746
+  void stopButtonClicked(649,21271
+  void conButtonClicked(654,21340
+  static String getListOfActiveBits 676,21958
+  void dumpDeviceInfo(687,22197
+  int getNumberOfHardwareOutputs(715,23494
+  void logMessage 731,23958
+  void sliderValueChanged(738,24178
+  void 	sliderDragStarted 742,24244
+  void sliderDragEnded 747,24311
+  void sliderSetRange(754,24457
+  void sliderEnabled(760,24611
+  AudioFormatManager formatManager;768,24828
+  OwnedArray<AudioTransportSource> transports;769,24865
+  OwnedArray<AudioFormatReaderSource> readerSources;770,24913
+  OwnedArray<ChannelRemappingAudioSource> mapper;771,24967
+  MixerAudioSource mixer;773,25022
+  TransportState state;774,25049
+  Array<File> files;775,25074
+  int fileIndex 776,25096
+  int channelsInFile 777,25118
+  const static int maxChannels 778,25145
+  const static int maxNumberOfFiles 779,25183
+  const static int sourceChannels 780,25235
+  int channelsPerFile[channelsPerFile781,25276
+  TextButton openButton;784,25325
+  TextButton playButton;785,25351
+  TextButton stopButton;786,25377
+  TextButton conButton;787,25403
+  Label titleLabel;788,25428
+  OwnedArray<Label> fileNameLabels;789,25449
+  String dataDir;790,25486
+  Slider positionSlider;791,25505
+  Label  currentPosition;792,25531
+  int xPosInterface 793,25558
+  int yPosInterface 794,25586
+  int sema 795,25614
+  AudioDeviceSelectorComponent audioSetupComp;797,25635
+  Label cpuUsageLabel;798,25683
+  Label cpuUsageText;799,25707
+  Label channelNames[channelNames800,25730
+  TextEditor diagnosticsBox;801,25766
+  ToggleButton *routeChannel[routeChannel802,25796
+  void* localOsc;803,25874
+  String defaultDirectory 805,25895
+    OSCInterface(815,26317
+    ~OSCInterface(842,27139
+    void test(857,27498
+    void sendMessage(862,27575
+    int connectButtonClicked(871,27824
+    void connectToServer(891,28327
+    void handleConnectError 901,28609
+    void showConnectionErrorMessage 909,28846
+    void handleInvalidPortNumberEntered(917,29169
+    bool isValidOscPort 925,29402
+    bool isConnected(930,29500
+    void oscMessageReceived 935,29591
+    const int receivePort;979,31223
+    const int sendPort;980,31251
+    const OSCAddress *rFileName;rFileName983,31350
+    const OSCAddress *aFile;aFile984,31398
+    const OSCAddress *rPlay;rPlay985,31444
+    const OSCAddress *rClear;rClear986,31481
+    std::unique_ptr<OSCSender> oscSend;987,31512
+    MainContentComponent *main;main988,31553
+Component* createMainContentComponent(998,31861

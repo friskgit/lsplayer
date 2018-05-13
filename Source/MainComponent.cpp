@@ -395,7 +395,7 @@ private:
 	}
       }
       //      createDefaultMapping();
-      createStereoMapping(1, 90);
+      //      createStereoMapping(1, 90);
       resized();
       sliderSetRange(0, length);
       sliderEnabled(true);
@@ -569,7 +569,6 @@ private:
     File *audioFile = new File(*f);
     Array<File> n;
     if(audioFile->exists()) {
-      std::cout << "File exists" << std::endl;
       files.add(*audioFile);
       createTransportFor();
       openButtonClicked();
@@ -821,6 +820,7 @@ private:
       aFile = new OSCAddress(oscRoot+"/append");
       rPlay = new OSCAddress(oscRoot+"/play");
       rClear = new OSCAddress(oscRoot+"/clear");
+      rPosition = new OSCAddress(oscRoot+"/stereoMap");
       if (! isValidOscPort(receivePort)) {
 	handleInvalidPortNumberEntered();
 	return;
@@ -835,6 +835,7 @@ private:
       addListener(this, *rFileName);
       addListener(this, *aFile);
       addListener(this, *rClear);
+      addListener(this, *rPosition);
 
       oscSend.reset(new OSCSender());
     }
@@ -846,6 +847,7 @@ private:
       delete aFile;
       delete rPlay;
       delete rClear;
+      delete rPosition;
       oscSend->disconnect();
       disconnect();
       oscSend = nullptr;
@@ -973,6 +975,12 @@ private:
 	  }
 	}
       }
+      // Responds to /lsplayer/stereoMap ii index angle
+      if(message.size() == 2 && message[0].isInt32() && message[1].isInt32()) {
+	if(rPosition->toString().compare(message.getAddressPattern().toString()) == 0) {
+	  main->createStereoMapping(message[0].getInt32(), message[1].getInt32());
+	}
+      }
     }
 
     //==============================================================================
@@ -983,7 +991,8 @@ private:
     const OSCAddress *rFileName; // Add a file
     const OSCAddress *aFile; //Append a file
     const OSCAddress *rPlay; //Play
-    const OSCAddress *rClear;
+    const OSCAddress *rClear; //Clear playlist
+    const OSCAddress *rPosition; // Position sound
     std::unique_ptr<OSCSender> oscSend;
     MainContentComponent *main;
     String oscAddress = "127.0.0.1";
