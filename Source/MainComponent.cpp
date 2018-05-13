@@ -105,6 +105,7 @@ public:
     ////////////////////////////////////////
     // Set up OSC
     localOsc = new OSCInterface(this);
+    //std::unique_ptr<OSCInterface> t (new OSCInterface(this));
     
     //    OSCInterface *osc = new OSCInterface(this);
     //    localOsc->test();
@@ -116,6 +117,9 @@ public:
   ~MainContentComponent()
   {
     formatManager.clearFormats();
+    //    localOsc = nullptr;
+    OSCInterface *osc = static_cast<OSCInterface*>(localOsc);
+    delete osc;
     localOsc = nullptr;
     readerSources.clear();
     transports.clear();
@@ -528,6 +532,7 @@ private:
     }
     OSCInterface *osc = static_cast<OSCInterface*>(localOsc);
     osc->sendMessage("/player/stdout", String("The file ")+name+String(" has been loaded"));
+    osc = nullptr;
   }
 
   /** 
@@ -659,6 +664,7 @@ private:
       conButton.setButtonText("Connect");
       conButton.setColour (TextButton::buttonColourId, Colours::red);
     }
+    osc = nullptr;
   }
 
   // void setConButtonText()
@@ -797,7 +803,8 @@ private:
   void* localOsc;
 
   String defaultDirectory = "~/rosenberg/audio";
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
+  JUCE_DECLARE_NON_COPYABLE (MainContentComponent)
+  //    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 
   class OSCInterface : private OSCReceiver,
 		       private OSCReceiver::ListenerWithOSCAddress<OSCReceiver::MessageLoopCallback>
@@ -828,13 +835,20 @@ private:
       addListener(this, *rFileName);
       addListener(this, *aFile);
       addListener(this, *rClear);
+
+      //      oscSend = std::make_unique<OSCSender>(new OSCSender());
     }
     
     ~OSCInterface()
     {
       std::cout << "Here" << std::endl;
+      delete rFileName;
+      delete aFile;
+      delete rPlay;
+      delete rClear;
       oscSend.disconnect();
       disconnect();
+      main = nullptr;
     }
     
     //==============================================================================
@@ -961,13 +975,13 @@ private:
     }
 
     //==============================================================================
-    int receivePort;
-    int sendPort;
+    const int receivePort;
+    const int sendPort;
     int currentPortNumber = -1;
     const String oscRoot = "/lsplayer";
     const OSCAddress *rFileName; // Add a file
     const OSCAddress *aFile; //Append a file
-    OSCAddress *rPlay; //Play
+    const OSCAddress *rPlay; //Play
     const OSCAddress *rClear;
     OSCSender oscSend;
     MainContentComponent *main;
