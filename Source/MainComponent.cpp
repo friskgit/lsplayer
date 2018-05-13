@@ -72,8 +72,8 @@ public:
 
     cpuUsageLabel.setText ("CPU Usage", dontSendNotification);
     cpuUsageText.setJustificationType (Justification::right);
-    addAndMakeVisible (&cpuUsageLabel);
-    addAndMakeVisible (&cpuUsageText);
+    //    addAndMakeVisible (&cpuUsageLabel);
+    //    addAndMakeVisible (&cpuUsageText);
     
     setSize (800, 600);
 
@@ -174,14 +174,14 @@ public:
 
   void paint (Graphics& g) override
   {
-    g.setColour (Colours::grey);
-    g.fillRect (getLocalBounds().removeFromRight (proportionOfWidth (0.4f)));
+        g.setColour (Colours::grey);
+        g.fillRect (getLocalBounds().removeFromRight(proportionOfWidth (0.4f)).withTrimmedBottom(180));
   }
   
   void resized() override
   {
     auto left = xPosInterface;
-    auto vert = yPosInterface; 
+    auto vert = yPosInterface; // 360
     positionSlider.setBounds (left+1, yPosInterface-40, 287, 20);
     
     titleLabel.setBounds(10, 0, 200, 100);
@@ -199,7 +199,7 @@ public:
     cpuUsageText.setBounds (topLine);
     rect.removeFromTop (20);
 
-    diagnosticsBox.setBounds (rect);
+    diagnosticsBox.setBounds (rect.withTrimmedBottom(180));
 
     ////////////////////////////////////////
     // Place the soundfile names in the interface
@@ -454,10 +454,14 @@ private:
     int middleRing = 8;
     int topRing = 4;
     float degreesPerSpeaker = 360/lowerRing;
-    switch(s) {
+    float spread = 1;
+    float startPosition = 29.29;
+    float adjustedAngle = angle+startPosition;
+    switch(s) {	       
     case Dome:
-      spkr->first = (int)(angle/degreesPerSpeaker)-0.5;
-      spkr->second = (int)(angle/degreesPerSpeaker)+0.5;
+      // subtract/add spread to get neighbouring speaker, add 1 (speakers start at 1), wrap to ring.
+      spkr->first = (int)((adjustedAngle/degreesPerSpeaker)-spread+1)%lowerRing; 
+      spkr->second = (int)((adjustedAngle/degreesPerSpeaker)+spread+1)%lowerRing;
     }
   }
   
