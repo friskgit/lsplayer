@@ -435,9 +435,9 @@ private:
    *  Put the sound of the file in fileIndex at position 
    *  centerPosition.
    */
-  void createStereoMapping(int fileIndex, int centerPosition) {
+  void createStereoMapping(int fileIndex, int centerPosition, float radius) {
     std::pair<int, int> stereoPair;
-    calculatePosition(centerPosition, 1, &stereoPair, Dome);
+    calculatePosition(centerPosition, radius, &stereoPair, Dome);
     if(fileIndex < files.size()) {
       // Wrap position around the actual number of speakers.
       int spkrL = stereoPair.first%getNumberOfHardwareOutputs();
@@ -449,19 +449,58 @@ private:
     }
   }
 
-  void calculatePosition(int angle, int radius, std::pair<int, int> *spkr, SpeakerSetup s) {
+  void calculatePosition(int angle, float radius, std::pair<int, int> *spkr, SpeakerSetup s) {
     int lowerRing = 16;
     int middleRing = 8;
     int topRing = 4;
-    float degreesPerSpeaker = 360/lowerRing;
-    float spread = 1;
-    float startPosition = 29.29;
-    float adjustedAngle = angle+startPosition;
+    float degreesPerSpeakerLow = 360/lowerRing;
+    float degreesPerSpeakerMid = 360/middleRing;
+    float degreesPerSpeakerTop = 360/topRing;
+    float spread = .5;
+    float startPositionL = 29.29;
+    float startPositionM = 22;
+    float startPositionT = 45;
+    float adjustedAngle = 0;
+    std::cout << "Radius: " << radius << std::endl;
     switch(s) {	       
     case Dome:
-      // subtract/add spread to get neighbouring speaker, add 1 (speakers start at 1), wrap to ring.
-      spkr->first = (int)((adjustedAngle/degreesPerSpeaker)-spread+1)%lowerRing; 
-      spkr->second = (int)((adjustedAngle/degreesPerSpeaker)+spread+1)%lowerRing;
+      // VOG only
+      if(radius == 0) {
+	spkr->first += 28;
+	spkr->second += 28;
+	break;
+      }
+      // Upper ring
+      else if(radius > 0 && radius < 0.33333) {
+	std::cout << "Upper" << radius << std::endl;
+	adjustedAngle = angle+startPositionT;
+	// subtract/add spread to get neighbouring speaker, add 1 (speakers start at 1), wrap to ring.
+	spkr->first = (int)((adjustedAngle/degreesPerSpeakerTop))%topRing;
+	spkr->second = (int)((adjustedAngle/degreesPerSpeakerTop)+1)%topRing;
+	spkr->first += lowerRing+middleRing;
+	spkr->second += lowerRing+middleRing;
+	break;
+      }
+      //middle ring
+      else if(radius > 0.3333 && radius < 0.6666) {
+      	adjustedAngle = angle+startPositionM;
+      	std::cout << "Middle" << radius << std::endl;
+      	// subtract/add spread to get neighbouring speaker, add 1 (speakers start at 1), wrap to ring.
+      	spkr->first = (int)(adjustedAngle/degreesPerSpeakerMid)%middleRing;
+      	spkr->second = (int)((adjustedAngle/degreesPerSpeakerMid)+1)%middleRing;
+      	spkr->first += lowerRing;
+      	spkr->second += lowerRing;
+      	break;
+      }
+      // lower ring
+      else if(radius > 0.6666) {
+      	std::cout << "Lower" << radius << std::endl;
+      	adjustedAngle = angle+startPositionL;
+      	// subtract/add spread to get neighbouring speaker, add 1 (speakers start at 1), wrap to ring.
+      	spkr->first = (int)((adjustedAngle/degreesPerSpeakerLow)-spread+1)%lowerRing; 
+      	spkr->second = (int)((adjustedAngle/degreesPerSpeakerLow)+spread+1)%lowerRing;
+      	break;
+      }
     }
   }
   
@@ -805,7 +844,7 @@ private:
   ToggleButton *routeChannel[maxNumberOfFiles][sourceChannels][maxChannels];
   void* localOsc;
 
-  String defaultDirectory = "~/rosenberg/audio";
+  String defaultDirectory = "~/lsaudio";
   JUCE_DECLARE_NON_COPYABLE (MainContentComponent)
   //    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainContentComponent)
 
@@ -979,10 +1018,10 @@ private:
 	  }
 	}
       }
-      // Responds to /lsplayer/stereoMap ii index angle
-      if(message.size() == 2 && message[0].isInt32() && message[1].isInt32()) {
+      // Responds to /lsplayer/stereoMap iif index angle radius
+      if(message.size() == 3 && message[0].isInt32() && message[1].isInt32() && message[2].isFloat32()) {
 	if(rPosition->toString().compare(message.getAddressPattern().toString()) == 0) {
-	  main->createStereoMapping(message[0].getInt32(), message[1].getInt32());
+	  main->createStereoMapping(message[0].getInt32(), message[1].getInt32(), message[2].getFloat32());
 	}
       }
     }
