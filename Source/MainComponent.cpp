@@ -72,9 +72,7 @@ public:
 
     cpuUsageLabel.setText ("CPU Usage", dontSendNotification);
     cpuUsageText.setJustificationType (Justification::right);
-    //    addAndMakeVisible (&cpuUsageLabel);
-    //    addAndMakeVisible (&cpuUsageText);
-    
+
     setSize (1200, 600);
 
     ////////////////////////////////////////
@@ -189,8 +187,9 @@ public:
     playButton.setBounds(left-28, vert, 80, 50);
     stopButton.setBounds(left+61, vert, 80, 50);
     openButton.setBounds(left+150, vert, 80, 50);
-
-        audioSetupComp.setBounds(0, 13, 500, 300);    
+// audioSetupComp.setItemHeight(23); 
+        audioSetupComp.setBounds(0, 13, 500, 180);    
+       
     auto rect = getLocalBounds();
     //audioSetupComp.setBounds(rect.removeFromLeft (480));
     rect.removeFromLeft (480);
