@@ -75,7 +75,7 @@ public:
     //    addAndMakeVisible (&cpuUsageLabel);
     //    addAndMakeVisible (&cpuUsageText);
     
-    setSize (800, 600);
+    setSize (1200, 600);
 
     ////////////////////////////////////////
     // Set up audio and load files
@@ -175,41 +175,41 @@ public:
   void paint (Graphics& g) override
   {
         g.setColour (Colours::grey);
-        g.fillRect (getLocalBounds().removeFromRight(proportionOfWidth (0.4f)).withTrimmedBottom(180));
+        //g.fillRect(getLocalBounds().removeFromRight(proportionOfWidth (0.4f)).withTrimmedBottom(180));
   }
   
   void resized() override
   {
-    auto left = xPosInterface;
+    auto left = xPosInterface+76;
     auto vert = yPosInterface; // 360
-    positionSlider.setBounds (left+1, yPosInterface-40, 287, 20);
+    positionSlider.setBounds (left+-117, yPosInterface-40, 351, 20);
     
     titleLabel.setBounds(10, 0, 200, 100);
-    conButton.setBounds(left-104, vert, 80, 50);
-    playButton.setBounds(left, vert, 80, 50);
-    stopButton.setBounds(left+104, vert, 80, 50);
-    openButton.setBounds(left+207, vert, 80, 50);
+    conButton.setBounds(left-117, vert, 80, 50);
+    playButton.setBounds(left-28, vert, 80, 50);
+    stopButton.setBounds(left+61, vert, 80, 50);
+    openButton.setBounds(left+150, vert, 80, 50);
 
+        audioSetupComp.setBounds(0, 13, 500, 300);    
     auto rect = getLocalBounds();
-    audioSetupComp.setBounds (rect.removeFromLeft (proportionOfWidth (0.6f)));
-    rect.reduce (10, 10);
+    //audioSetupComp.setBounds(rect.removeFromLeft (480));
+    rect.removeFromLeft (480);
+    rect.reduce (14, 10);
 
-    auto topLine (rect.removeFromTop (20));
-    cpuUsageLabel.setBounds (topLine.removeFromLeft (topLine.getWidth() / 2));
-    cpuUsageText.setBounds (topLine);
-    rect.removeFromTop (20);
+    // auto topLine (rect.removeFromTop (0));
+    // rect.removeFromTop (0);
 
-    diagnosticsBox.setBounds (rect.withTrimmedBottom(180));
+    diagnosticsBox.setBounds(488, 27, 300, 388);
 
     ////////////////////////////////////////
     // Place the soundfile names in the interface
-    int yPos = vert + 65; // Start position
+    int yPos = vert + 70; // Start position
     for(int i=0; i<fileNameLabels.size(); i++) {
       Label *l = fileNameLabels[i];
       int ySpace = 20*channelsPerFile[i]+5; // Space between items
       //      logMessage("Ch.names:"+std::to_string(ySpace * channelsPerFile[i]+5));
       if(l != nullptr) {
-    	l->setBounds(left-150, yPos, 140, 50);
+    	l->setBounds(left-260, yPos, 140, 50);
     	l->setFont(Font ("Geneva", 12.0f, Font::plain));
     	l->setJustificationType(Justification::centredRight);
 	yPos += ySpace;
@@ -353,7 +353,7 @@ private:
       double length = 0;
       // Geometry
       int startYPos = yPosInterface+80;
-      int startXPos = xPosInterface;
+      int startXPos = xPosInterface-30;
       int columnWidth = 50;
       int rowHeight = 20;
       int spaceBetwFiles = 5;
